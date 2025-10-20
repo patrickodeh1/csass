@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+{% block title %}Communication Logs - CSASS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h2 class="text-dark fw-bold display-6">
+                <i class="bi bi-envelope-paper"></i> Communication Logs
+            </h2>
+            <p class="text-muted mb-0">Complete audit trail of all emails and SMS sent by the system</p>
+        </div>
+        <div class="col-auto">
+            <div class="badge bg-primary p-2">
+                <i class="bi bi-database"></i> {{ page_obj.paginator.count }} Total Logs
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="card mb-4 p-3 shadow-sm border-0">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Communication Type</label>
+                <select name="type" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Types</option>
+                    <option value="email" {% if comm_type == 'email' %}selected{% endif %}>
+                        <i class="bi bi-envelope"></i> Email Only
+                    </option>
+                    <option value="sms" {% if comm_type == 'sms' %}selected{% endif %}>
+                        <i class="bi bi-phone"></i> SMS Only
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Status</label>
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    <option value="sent" {% if status == 'sent' %}selected{% endif %}>Sent</option>
+                    <option value="failed" {% if status == 'failed' %}selected{% endif %}>Failed</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel"></i> Apply Filters
+                </button>
+            </div>
+            {% if comm_type or status %}
+            <div class="col-md-3">
+                <a href="{% url 'communication_logs' %}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-x-circle"></i> Clear Filters
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </form>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <i class="bi bi-envelope-check text-success" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 mb-0">{{ total_in_view }}</h4>  {# Aggregated total #}
+                <small class="text-muted">Total in View</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <i class="bi bi-envelope text-primary" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 mb-0">{{ emails_count }}</h4>
+                <small class="text-muted">Emails</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <i class="bi bi-phone text-info" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 mb-0">{{ sms_count }}</h4>
+                <small class="text-muted">SMS Messages</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <i class="bi bi-exclamation-triangle text-danger" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 mb-0">{{ failed_count }}</h4>  {# Updated #}
+                <small class="text-muted">Failed</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Communication Logs Table -->
+    <div class="card shadow border-0">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-list-ul"></i> Communication History
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 140px;">Date & Time</th>
+                            <th style="width: 80px;">Type</th>
+                            <th style="width: 200px;">Recipient</th>
+                            <th>Template / Subject</th>
+                            <th style="width: 100px;">Status</th>
+                            <th style="width: 80px;" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in page_obj %}
+                        <tr>
+                            <td>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar3"></i> {{ log.sent_at|date:"M d, Y" }}<br>
+                                    <i class="bi bi-clock"></i> {{ log.sent_at|time:"g:i A" }}
+                                </small>
+                            </td>
+                            <td>
+                                {% if log.communication_type == 'email' %}
+                                <span class="badge bg-primary">
+                                    <i class="bi bi-envelope"></i> Email
+                                </span>
+                                {% else %}
+                                <span class="badge bg-info">
+                                    <i class="bi bi-phone"></i> SMS
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.communication_type == 'email' %}
+                                <small>
+                                    <i class="bi bi-envelope"></i> {{ log.recipient_email|truncatechars:30 }}
+                                </small>
+                                {% else %}
+                                <small>
+                                    <i class="bi bi-phone"></i> {{ log.recipient_phone }}
+                                </small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.message_template %}
+                                <span class="badge bg-secondary mb-1">
+                                    {{ log.message_template.get_message_type_display }}
+                                </span>
+                                <br>
+                                {% endif %}
+                                <small class="text-muted">
+                                    {% if log.communication_type == 'email' %}
+                                        {{ log.subject|truncatechars:60 }}
+                                    {% else %}
+                                        {{ log.body|truncatechars:60 }}
+                                    {% endif %}
+                                </small>
+                            </td>
+                            <td>
+                                {% if log.status == 'sent' %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Sent
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-x-circle"></i> Failed
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-primary" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#logModal{{ log.id }}"
+                                        title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Modal for Log Details -->
+                        <div class="modal fade" id="logModal{{ log.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-dark text-white">
+                                        <h5 class="modal-title">
+                                            <i class="bi bi-{% if log.communication_type == 'email' %}envelope{% else %}phone{% endif %}"></i>
+                                            Communication Details
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <strong>Type:</strong>
+                                                <span class="badge bg-{% if log.communication_type == 'email' %}primary{% else %}info{% endif %}">
+                                                    {{ log.get_communication_type_display }}
+                                                </span>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <strong>Status:</strong>
+                                                <span class="badge bg-{% if log.status == 'sent' %}success{% else %}danger{% endif %}">
+                                                    {{ log.status|title }}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <strong>Sent At:</strong><br>
+                                                <small>{{ log.sent_at|date:"F d, Y g:i A" }}</small>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <strong>Recipient:</strong><br>
+                                                <small>
+                                                    {% if log.communication_type == 'email' %}
+                                                        {{ log.recipient_email }}
+                                                    {% else %}
+                                                        {{ log.recipient_phone }}
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+
+                                        {% if log.message_template %}
+                                        <div class="mb-3">
+                                            <strong>Template Used:</strong><br>
+                                            <span class="badge bg-secondary">{{ log.message_template.get_message_type_display }}</span>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if log.booking %}
+                                        <div class="mb-3">
+                                            <strong>Related Booking:</strong><br>
+                                            <a href="{% url 'booking_detail' log.booking.id %}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                <i class="bi bi-calendar-event"></i> View Booking
+                                            </a>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if log.communication_type == 'email' %}
+                                        <div class="mb-3">
+                                            <strong>Subject:</strong>
+                                            <div class="border rounded p-2 bg-light">
+                                                <small>{{ log.subject }}</small>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                        <div class="mb-3">
+                                            <strong>{% if log.communication_type == 'email' %}Email Body:{% else %}SMS Message:{% endif %}</strong>
+                                            <div class="border rounded p-3 bg-light" style="max-height: 300px; overflow-y: auto;">
+                                                <small style="white-space: pre-wrap;">{{ log.body|striptags }}</small>
+                                            </div>
+                                        </div>
+
+                                        {% if log.status == 'failed' and log.error_message %}
+                                        <div class="alert alert-danger">
+                                            <strong><i class="bi bi-exclamation-triangle"></i> Error Message:</strong><br>
+                                            <small>{{ log.error_message }}</small>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-5">
+                                <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.5;"></i>
+                                <p class="mt-3 fw-semibold">No communication logs found</p>
+                                {% if comm_type or status %}
+                                <small class="text-muted">Try adjusting your filters</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer bg-light">
+            <nav aria-label="Communication logs pagination">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if comm_type %}&type={{ comm_type }}{% endif %}{% if status %}&status={{ status }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if comm_type %}&type={{ comm_type }}{% endif %}{% if status %}&status={{ status }}{% endif %}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if comm_type %}&type={{ comm_type }}{% endif %}{% if status %}&status={{ status }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if comm_type %}&type={{ comm_type }}{% endif %}{% if status %}&status={{ status }}{% endif %}">Last</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Info Card -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-info text-white">
+            <h6 class="mb-0"><i class="bi bi-info-circle"></i> About Communication Logs</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <h6><i class="bi bi-database"></i> What's Logged</h6>
+                    <ul class="small mb-0">
+                        <li>Booking approvals</li>
+                        <li>Confirmation emails/SMS</li>
+                        <li>Appointment reminders</li>
+                        <li>Drip campaign messages</li>
+                        <li>All automated notifications</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6><i class="bi bi-shield-check"></i> Use Cases</h6>
+                    <ul class="small mb-0">
+                        <li>Verify message delivery</li>
+                        <li>Debug failed communications</li>
+                        <li>Compliance & audit trail</li>
+                        <li>Track client communication history</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6><i class="bi bi-clock-history"></i> Retention</h6>
+                    <p class="small mb-0">
+                        All logs are permanently stored for compliance and audit purposes. Click the <i class="bi bi-eye"></i> icon to view full message details.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

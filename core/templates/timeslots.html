@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}Time Slots - CSASS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h2><i class="bi bi-clock-history"></i> Time Slots Management</h2>
+        </div>
+        <div class="col-auto">
+            {% if is_admin %}
+            <button type="button" class="btn btn-danger" id="bulkDeleteBtn" style="display: none;">
+                <i class="bi bi-trash"></i> Delete Selected (<span id="selectedCount">0</span>)
+            </button>
+            <a href="{% url 'timeslot_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create Slot
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="card mb-4 p-3 shadow-sm border-0">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Cycle</label>
+                <select name="cycle" class="form-select" onchange="this.form.submit()">
+                    {% for c in cycles %}
+                    <option value="{{ c.id }}" {% if selected_cycle.id == c.id %}selected{% endif %}>
+                        {{ c.start_date|date:"M d" }} - {{ c.end_date|date:"M d, Y" }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if is_admin %}
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Salesman</label>
+                <select name="salesman" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Salesmen</option>
+                    {% for s in salesmen %}
+                    <option value="{{ s.id }}" {% if selected_salesman == s.id|stringformat:'s' %}selected{% endif %}>
+                        {{ s.get_full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Type</label>
+                <select name="type" class="form-select" onchange="this.form.submit()">
+                    <option value="">All</option>
+                    <option value="zoom" {% if selected_type == 'zoom' %}selected{% endif %}>Zoom</option>
+                    <option value="in_person" {% if selected_type == 'in_person' %}selected{% endif %}>In-Person</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Date</label>
+                <input type="date" name="day" class="form-control" value="{{ selected_day }}" onchange="this.form.submit()">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-secondary w-100">
+                    <i class="bi bi-filter"></i> Filter
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Mass Delete Form -->
+    <form method="post" id="bulkDeleteForm" action="{% url 'timeslots' %}">
+        {% csrf_token %}
+        <input type="hidden" name="bulk_action" value="delete">
+        
+        <div class="card shadow border-0">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Time Slots ({{ page_obj.paginator.count }} total)</h5>
+                {% if is_admin %}
+                <div class="form-check form-check-inline mb-0">
+                    <input class="form-check-input" type="checkbox" id="selectAll">
+                    <label class="form-check-label text-white" for="selectAll">
+                        Select All on Page
+                    </label>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                {% if is_admin %}
+                                <th style="width: 40px;">
+                                    <i class="bi bi-check-square"></i>
+                                </th>
+                                {% endif %}
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Salesman</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for slot in page_obj %}
+                            <tr class="{% if not slot.is_active %}table-secondary{% endif %}">
+                                {% if is_admin %}
+                                <td>
+                                    <input type="checkbox" class="form-check-input slot-checkbox" 
+                                           name="slot_ids" value="{{ slot.id }}">
+                                </td>
+                                {% endif %}
+                                <td>
+                                    <span class="badge bg-secondary">{{ slot.date|date:"D, M d" }}</span>
+                                </td>
+                                <td><strong>{{ slot.start_time|time:"g:i A" }}</strong></td>
+                                <td>{{ slot.salesman.get_full_name }}</td>
+                                <td>
+                                    <span class="badge bg-{% if slot.appointment_type == 'zoom' %}info{% else %}primary{% endif %}">
+                                        {% if slot.appointment_type == 'zoom' %}
+                                            <i class="bi bi-camera-video"></i> Zoom
+                                        {% else %}
+                                            <i class="bi bi-geo-alt"></i> In-Person
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if slot.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'timeslot_edit' slot.id %}" class="btn btn-outline-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'timeslot_delete' slot.id %}" class="btn btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="{% if is_admin %}8{% else %}7{% endif %}" class="text-center text-muted py-5">
+                                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                    <p class="mt-3">No time slots found</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="card-footer bg-light">
+                <nav aria-label="Pagination">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if selected_cycle %}&cycle={{ selected_cycle.id }}{% endif %}{% if selected_salesman %}&salesman={{ selected_salesman }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_day %}&day={{ selected_day }}{% endif %}">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_cycle %}&cycle={{ selected_cycle.id }}{% endif %}{% if selected_salesman %}&salesman={{ selected_salesman }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_day %}&day={{ selected_day }}{% endif %}">Previous</a>
+                        </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_cycle %}&cycle={{ selected_cycle.id }}{% endif %}{% if selected_salesman %}&salesman={{ selected_salesman }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_day %}&day={{ selected_day }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if selected_cycle %}&cycle={{ selected_cycle.id }}{% endif %}{% if selected_salesman %}&salesman={{ selected_salesman }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_day %}&day={{ selected_day }}{% endif %}">Last</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const slotCheckboxes = document.querySelectorAll('.slot-checkbox');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    const selectedCount = document.getElementById('selectedCount');
+    const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+    
+    // Update selected count and button visibility
+    function updateBulkDeleteBtn() {
+        const checkedBoxes = document.querySelectorAll('.slot-checkbox:checked');
+        const count = checkedBoxes.length;
+        selectedCount.textContent = count;
+        bulkDeleteBtn.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+    
+    // Select all functionality
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            slotCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateBulkDeleteBtn();
+        });
+    }
+    
+    // Individual checkbox change
+    slotCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateBulkDeleteBtn();
+            
+            // Update "select all" state
+            const allChecked = Array.from(slotCheckboxes).every(cb => cb.checked);
+            const someChecked = Array.from(slotCheckboxes).some(cb => cb.checked);
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = allChecked;
+                selectAllCheckbox.indeterminate = someChecked && !allChecked;
+            }
+        });
+    });
+    
+    // Bulk delete button click
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.addEventListener('click', function() {
+            const count = document.querySelectorAll('.slot-checkbox:checked').length;
+            if (confirm(`Are you sure you want to delete ${count} selected slot(s)? This action cannot be undone.`)) {
+                bulkDeleteForm.submit();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

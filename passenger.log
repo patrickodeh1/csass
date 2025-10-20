@@ -1,0 +1,773 @@
+App 1566497 output: tput: No value for $TERM and no -T specified
+App 1566497 output: Traceback (most recent call last):
+App 1566497 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1566497 output:     app_module = load_app()
+App 1566497 output:                  ^^^^^^^^^^
+App 1566497 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1566497 output:     spec.loader.exec_module(app_module)
+App 1566497 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1566497 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1566497 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1566497 output:     application = get_wsgi_application()
+App 1566497 output:                   ^^^^^^^
+App 1566497 output: ^^^^^^^^^^^^^^^
+App 1566497 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1566497 output:     django.setup(set_prefix=False)
+App 1566497 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1566497 output:     apps.populate(settings.INSTALLED_APPS)
+App 1566497 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1566497 output:     app_config.import_models()
+App 1566497 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1566497 output:     self.models_module = import_module(models_module_name)
+App 1566497 output:             
+App 1566497 output:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1566497 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1566497 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1566497 output:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1566497 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1566497 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1566497 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1566497 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1566497 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1566497 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1566497 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1566497 output:     from celery import current_app, schedules
+App 1566497 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1566497 output:     from celery import Celery
+App 1566497 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1579039 output: tput: No value for $TERM and no -T specified
+App 1579039 output: Traceback (most recent call last):
+App 1579039 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1579039 output:     app_module = load_app()
+App 1579039 output:                  ^^^^^^^^
+App 1579039 output: ^^
+App 1579039 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1579039 output:     spec.loader.exec_module(app_module)
+App 1579039 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1579039 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1579039 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1579039 output:     application = get_wsgi_application()
+App 1579039 output:           
+App 1579039 output:         ^^^^^^^^^^^^^^^^^^^^^^
+App 1579039 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1579039 output:     django.setup(set_prefix=False)
+App 1579039 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1579039 output:     apps.populate(settings.INSTALLED_APPS)
+App 1579039 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1579039 output:     app_config.import_models()
+App 1579039 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1579039 output:     self.models_module = import_module(models_module_name)
+App 1579039 output:                          ^^^^^^^^^^^^^^
+App 1579039 output: ^^^^^^^^^^^^^^^^^^^
+App 1579039 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1579039 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1579039 output:            ^^^^^^
+App 1579039 output: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1579039 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1579039 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1579039 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1579039 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1579039 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1579039 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1579039 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1579039 output:     from celery import current_app, schedules
+App 1579039 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1579039 output:     from celery import Celery
+App 1579039 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1579191 output: tput: No value for $TERM and no -T specified
+App 1579191 output: Traceback (most recent call last):
+App 1579191 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1579191 output:     app_module = load_app()
+App 1579191 output:                  ^^^^^^^^^^
+App 1579191 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1579191 output:     spec.loader.exec_module(app_module)
+App 1579191 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1579191 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1579191 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1579191 output:     application = get_wsgi_application()
+App 1579191 output:        
+App 1579191 output:            ^^^^^^^^^^^^^^^^^^^^^^
+App 1579191 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1579191 output:     django.setup(set_prefix=False)
+App 1579191 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1579191 output:     apps.populate(settings.INSTALLED_APPS)
+App 1579191 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1579191 output:     app_config.import_models()
+App 1579191 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1579191 output:     self.models_module = import_module(models_module_name)
+App 1579191 output:          
+App 1579191 output:                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1579191 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1579191 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1579191 output:            
+App 1579191 output: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1579191 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1579191 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1579191 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1579191 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1579191 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1579191 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1579191 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1579191 output:     from celery import current_app, schedules
+App 1579191 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1579191 output:     
+App 1579191 output: from celery import Celery
+App 1579191 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1622822 output: tput: No value for $TERM and no -T specified
+App 1622822 output: Traceback (most recent call last):
+App 1622822 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1622822 output:     app_module = load_app()
+App 1622822 output:                  ^^^^^^^^^^
+App 1622822 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1622822 output:     spec.loader.exec_module(app_module)
+App 1622822 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1622822 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1622822 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1622822 output:     application = get_wsgi_application()
+App 1622822 output:                   ^^^^^^^^^^^^^^^^^^^^^^
+App 1622822 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1622822 output:     django.setup(set_prefix=False)
+App 1622822 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1622822 output:     apps.populate(settings.INSTALLED_APPS)
+App 1622822 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1622822 output:     app_config.import_models()
+App 1622822 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1622822 output:     self.models_module = import_module(models_module_name)
+App 1622822 output:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1622822 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1622822 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1622822 output:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1622822 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1622822 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1622822 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1622822 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1622822 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1622822 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1622822 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1622822 output:     from celery import current_app, schedules
+App 1622822 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1622822 output:     from celery import Celery
+App 1622822 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1622974 output: tput: No value for $TERM and no -T specified
+App 1622974 output: Traceback (most recent call last):
+App 1622974 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1622974 output:     app_module = load_app()
+App 1622974 output:                  ^^^^^^^^^^
+App 1622974 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1622974 output:     spec.loader.exec_module(app_module)
+App 1622974 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1622974 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1622974 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1622974 output:     application = get_wsgi_application()
+App 1622974 output:                   ^^^^^^^^^^^^^^^^^^^^^^
+App 1622974 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1622974 output:     django.setup(set_prefix=False)
+App 1622974 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1622974 output:     apps.populate(settings.INSTALLED_APPS)
+App 1622974 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1622974 output:     app_config.import_models()
+App 1622974 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1622974 output:     self.models_module = import_module(models_module_name)
+App 1622974 output:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1622974 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1622974 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1622974 output:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1622974 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1622974 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1622974 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1622974 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1622974 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1622974 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1622974 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1622974 output:     from celery import current_app, schedules
+App 1622974 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1622974 output:     from celery import Celery
+App 1622974 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1645846 output: tput: No value for $TERM and no -T specified
+App 1645846 output: Traceback (most recent call last):
+App 1645846 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1645846 output:     app_module = load_app()
+App 1645846 output:                
+App 1645846 output:   ^^^^^^^^^^
+App 1645846 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1645846 output:     spec.loader.exec_module(app_module)
+App 1645846 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1645846 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1645846 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1645846 output:     application = get_wsgi_application()
+App 1645846 output:                   ^^^^^^^^^^^^^^^^^^^^^^
+App 1645846 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1645846 output:     django.setup(set_prefix=False)
+App 1645846 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1645846 output:     apps.populate(settings.INSTALLED_APPS)
+App 1645846 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1645846 output:     app_config.import_models()
+App 1645846 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1645846 output:     self.models_module = import_module(models_module_name)
+App 1645846 output:                   
+App 1645846 output:        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1645846 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1645846 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1645846 output:           
+App 1645846 output:  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1645846 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1645846 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1645846 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1645846 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1645846 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1645846 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1645846 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1645846 output:     from celery import current_app, schedules
+App 1645846 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1645846 output:     from celery import Celery
+App 1645846 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1645964 output: tput: No value for $TERM and no -T specified
+App 1645964 output: Traceback (most recent call last):
+App 1645964 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1645964 output:     app_module = load_app()
+App 1645964 output:                  ^^^
+App 1645964 output: ^^^^^^^
+App 1645964 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1645964 output:     spec.loader.exec_module(app_module)
+App 1645964 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1645964 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1645964 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1645964 output:     application = get_wsgi_application()
+App 1645964 output:                   ^^^^^^^
+App 1645964 output: ^^^^^^^^^^^^^^^
+App 1645964 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1645964 output:     django.setup(set_prefix=False)
+App 1645964 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1645964 output:     apps.populate(settings.INSTALLED_APPS)
+App 1645964 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1645964 output:     app_config.import_models()
+App 1645964 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1645964 output:     self.models_module = import_module(models_module_name)
+App 1645964 output:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1645964 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1645964 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1645964 output:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1645964 output: ^^^^^^^^^^^^^^
+App 1645964 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1645964 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1645964 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1645964 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1645964 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1645964 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1645964 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1645964 output:     from celery import current_app, schedules
+App 1645964 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1645964 output:     from celery import Celery
+App 1645964 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1646091 output: tput: No value for $TERM and no -T specified
+App 1646091 output: Traceback (most recent call last):
+App 1646091 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1646091 output:     app_module = load_app()
+App 1646091 output:    
+App 1646091 output:               ^^^^^^^^^^
+App 1646091 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1646091 output:     
+App 1646091 output: spec.loader.exec_module(app_module)
+App 1646091 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1646091 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1646091 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1646091 output:     application = get_wsgi_application()
+App 1646091 output:                   ^^^^^^^^^^^
+App 1646091 output: ^^^^^^^^^^^
+App 1646091 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1646091 output:     django.setup(set_prefix=False)
+App 1646091 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1646091 output:     apps.populate(settings.INSTALLED_APPS)
+App 1646091 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1646091 output:     app_config.import_models()
+App 1646091 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1646091 output:     self.models_module = import_module(models_module_name)
+App 1646091 output:                      
+App 1646091 output:     ^^^^^^^^^^^^^^^^^^^^^
+App 1646091 output: ^^^^^^^^^^^^
+App 1646091 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1646091 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1646091 output:        
+App 1646091 output:     ^^^^^^^^^
+App 1646091 output: ^^^^^^^^^^^^^^^^
+App 1646091 output: ^^^^^^^^^^^^^
+App 1646091 output: ^^^^^^^^^^^^^
+App 1646091 output: ^
+App 1646091 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1646091 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1646091 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1646091 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1646091 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1646091 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1646091 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1646091 output:     from celery import current_app, schedules
+App 1646091 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1646091 output:     from celery import Celery
+App 1646091 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1646214 output: tput: No value for $TERM and no -T specified
+App 1646214 output: Traceback (most recent call last):
+App 1646214 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1646214 output:     app_module = load_app()
+App 1646214 output:                  ^^^^^^^^^^
+App 1646214 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1646214 output:     spec.loader.exec_module(app_module)
+App 1646214 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1646214 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1646214 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1646214 output:     application = get_wsgi_application()
+App 1646214 output:                   ^^^^^^^^^^^^^^^^^^^^^^
+App 1646214 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1646214 output:     django.setup(set_prefix=False)
+App 1646214 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1646214 output:     apps.populate(settings.INSTALLED_APPS)
+App 1646214 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1646214 output:     app_config.import_models()
+App 1646214 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1646214 output:     self.models_module = import_module(models_module_name)
+App 1646214 output:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1646214 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1646214 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1646214 output:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1646214 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1646214 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1646214 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1646214 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1646214 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1646214 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1646214 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1646214 output:     from celery import current_app, schedules
+App 1646214 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1646214 output:     from celery import Celery
+App 1646214 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1703599 output: tput: No value for $TERM and no -T specified
+App 1703599 output: Traceback (most recent call last):
+App 1703599 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1703599 output:     app_module = load_app()
+App 1703599 output:                  ^^^^^^^^^^
+App 1703599 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1703599 output:     spec.loader.exec_module(app_module)
+App 1703599 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1703599 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1703599 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1703599 output:     application = get_wsgi_application()
+App 1703599 output:                   ^^^^^^^^^^^^^^^^^^^^^^
+App 1703599 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1703599 output:     django.setup(set_prefix=False)
+App 1703599 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1703599 output:     apps.populate(settings.INSTALLED_APPS)
+App 1703599 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1703599 output:     app_config.import_models()
+App 1703599 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1703599 output:     self.models_module = import_module(models_module_name)
+App 1703599 output:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1703599 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1703599 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1703599 output:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1703599 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1703599 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1703599 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1703599 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1703599 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1703599 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1703599 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1703599 output:     from celery import current_app, schedules
+App 1703599 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1703599 output:     from celery import Celery
+App 1703599 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1703835 output: tput: No value for $TERM and no -T specified
+App 1703835 output: Traceback (most recent call last):
+App 1703835 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1703835 output:     app_module = load_app()
+App 1703835 output:                  ^^^^^^^^^^
+App 1703835 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1703835 output:     spec.loader.exec_module(app_module)
+App 1703835 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1703835 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1703835 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1703835 output:     application = get_wsgi_application()
+App 1703835 output:                   ^^^^^^^^^^^^^^^^^^^
+App 1703835 output: ^^^
+App 1703835 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1703835 output:     django.setup(set_prefix=False)
+App 1703835 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1703835 output:     apps.populate(settings.INSTALLED_APPS)
+App 1703835 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1703835 output:     app_config.import_models()
+App 1703835 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1703835 output:     self.models_module = import_module(models_module_name)
+App 1703835 output:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1703835 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1703835 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1703835 output:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1703835 output: ^^^^^^^^^^
+App 1703835 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1703835 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1703835 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1703835 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1703835 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1703835 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1703835 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1703835 output:     from celery import current_app, schedules
+App 1703835 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1703835 output:     from celery import Celery
+App 1703835 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1743527 output: tput: No value for $TERM and no -T specified
+App 1743527 output: Traceback (most recent call last):
+App 1743527 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1743527 output:     app_module = load_app()
+App 1743527 output:                  ^^^^^^^^^^
+App 1743527 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1743527 output:     spec.loader.exec_module(app_module)
+App 1743527 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1743527 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1743527 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1743527 output:     application = get_wsgi_application()
+App 1743527 output:                
+App 1743527 output:    ^^^^^^^^^^^^^^^^^^^^^^
+App 1743527 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1743527 output:     django.setup(set_prefix=False)
+App 1743527 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1743527 output:     apps.populate(settings.INSTALLED_APPS)
+App 1743527 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1743527 output:     app_config.import_models()
+App 1743527 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1743527 output:     self.models_module = import_module(models_module_name)
+App 1743527 output:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1743527 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1743527 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1743527 output:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1743527 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1743527 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1743527 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1743527 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1743527 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1743527 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1743527 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1743527 output:     from celery import current_app, schedules
+App 1743527 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1743527 output:     from celery import Celery
+App 1743527 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1743728 output: tput: No value for $TERM and no -T specified
+App 1743728 output: Traceback (most recent call last):
+App 1743728 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1743728 output:     app_module = load_app()
+App 1743728 output:                  ^^^^^^^^^^
+App 1743728 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1743728 output:     spec.loader.exec_module(app_module)
+App 1743728 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1743728 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1743728 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1743728 output:     application = get_wsgi_application()
+App 1743728 output:                   ^^^^^^^^^^^^^^^^^^^^^^
+App 1743728 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1743728 output:     django.setup(set_prefix=False)
+App 1743728 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1743728 output:     apps.populate(settings.INSTALLED_APPS)
+App 1743728 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1743728 output:     app_config.import_models()
+App 1743728 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1743728 output:     self.models_module = import_module(models_module_name)
+App 1743728 output:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1743728 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1743728 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1743728 output:            ^^
+App 1743728 output: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1743728 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1743728 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1743728 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1743728 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1743728 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1743728 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1743728 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1743728 output:     from celery import current_app, schedules
+App 1743728 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1743728 output:     from celery import Celery
+App 1743728 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1754894 output: tput: No value for $TERM and no -T specified
+App 1754894 output: Traceback (most recent call last):
+App 1754894 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1754894 output:     app_module = load_app()
+App 1754894 output:                  ^^^^^^^^^^
+App 1754894 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1754894 output:     spec.loader.exec_module(app_module)
+App 1754894 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1754894 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1754894 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1754894 output:     application = get_wsgi_application()
+App 1754894 output:                   ^^^^^^^^^^^^^^^^^^^^^^
+App 1754894 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1754894 output:     django.setup(set_prefix=False)
+App 1754894 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1754894 output:     apps.populate(settings.INSTALLED_APPS)
+App 1754894 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1754894 output:     app_config.import_models()
+App 1754894 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1754894 output:     self.models_module = import_module(models_module_name)
+App 1754894 output:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1754894 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1754894 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1754894 output:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1754894 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1754894 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1754894 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1754894 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1754894 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1754894 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1754894 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1754894 output:     from celery import current_app, schedules
+App 1754894 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1754894 output:     from celery import Celery
+App 1754894 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1755043 output: tput: No value for $TERM and no -T specified
+App 1755043 output: Traceback (most recent call last):
+App 1755043 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1755043 output:     app_module = load_app()
+App 1755043 output:           
+App 1755043 output:        ^^^^^^^^^^
+App 1755043 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1755043 output:     spec.loader.exec_module(app_module)
+App 1755043 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1755043 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1755043 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1755043 output:     application = get_wsgi_application()
+App 1755043 output:                   ^
+App 1755043 output: ^^^^^^^^^^^^^^^^^^^^^
+App 1755043 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1755043 output:     django.setup(set_prefix=False)
+App 1755043 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1755043 output:     
+App 1755043 output: apps.populate(settings.INSTALLED_APPS)
+App 1755043 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1755043 output:     app_config.import_models()
+App 1755043 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1755043 output:     self.models_module = import_module(models_module_name)
+App 1755043 output:  
+App 1755043 output:                         ^^^^^^^^^^^^^^
+App 1755043 output: ^^^^^^^^^^^^^^
+App 1755043 output: ^^^^^
+App 1755043 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1755043 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1755043 output:           
+App 1755043 output:  ^^^^^^^^^^
+App 1755043 output: ^^^^^^^^^^^^
+App 1755043 output: ^^^^^^^^^^^^
+App 1755043 output: ^^^^^^^^^^^^
+App 1755043 output: ^^^^^^
+App 1755043 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1755043 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1755043 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1755043 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1755043 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1755043 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1755043 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1755043 output:     from celery import current_app, schedules
+App 1755043 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1755043 output:     from celery import Celery
+App 1755043 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1755404 output: tput: No value for $TERM and no -T specified
+App 1755404 output: Traceback (most recent call last):
+App 1755404 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1755404 output:     app_module = load_app()
+App 1755404 output:                  ^^^^^^^^^^
+App 1755404 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1755404 output:     spec.loader.exec_module(app_module)
+App 1755404 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1755404 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1755404 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1755404 output:     application = get_wsgi_application()
+App 1755404 output:                   ^^^^^^^^^^^^^^
+App 1755404 output: ^^^^^^^^
+App 1755404 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1755404 output:     django.setup(set_prefix=False)
+App 1755404 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1755404 output:     apps.populate(settings.INSTALLED_APPS)
+App 1755404 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1755404 output:     app_config.import_models()
+App 1755404 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1755404 output:     self.models_module = import_module(models_module_name)
+App 1755404 output:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1755404 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1755404 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1755404 output:            ^^^^^^^^^^^^^^^^^^
+App 1755404 output: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1755404 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1755404 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1755404 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1755404 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1755404 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1755404 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1755404 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1755404 output:     from celery import current_app, schedules
+App 1755404 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1755404 output:     from celery import Celery
+App 1755404 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1759133 output: tput: 
+App 1759133 output: No value for $TERM and no -T specified
+App 1759133 output: Traceback (most recent call last):
+App 1759133 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1759133 output:     app_module = load_app()
+App 1759133 output:                  ^^^^^^^^^^
+App 1759133 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1759133 output:     spec.loader.exec_module(app_module)
+App 1759133 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1759133 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1759133 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1759133 output:     application = get_wsgi_application()
+App 1759133 output:                   ^^^^^^^^^^^^^^^^^^^^^^
+App 1759133 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1759133 output:     django.setup(set_prefix=False)
+App 1759133 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1759133 output:     apps.populate(settings.INSTALLED_APPS)
+App 1759133 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1759133 output:     app_config.import_models()
+App 1759133 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1759133 output:     self.models_module = import_module(models_module_name)
+App 1759133 output:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1759133 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1759133 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1759133 output:      
+App 1759133 output:       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1759133 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1759133 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1759133 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1759133 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1759133 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1759133 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1759133 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1759133 output:     from celery import current_app, schedules
+App 1759133 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1759133 output:     from celery import Celery
+App 1759133 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1759283 output: tput: No value for $TERM and no -T specified
+App 1759283 output: Traceback (most recent call last):
+App 1759283 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1759283 output:     app_module = load_app()
+App 1759283 output:                  ^^^^^^^^^^
+App 1759283 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1759283 output:     spec.loader.exec_module(app_module)
+App 1759283 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1759283 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1759283 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1759283 output:     application = get_wsgi_application()
+App 1759283 output:                   ^^^^^^^^^^^^^^^^^^^^^^
+App 1759283 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1759283 output:     django.setup(set_prefix=False)
+App 1759283 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1759283 output:     apps.populate(settings.INSTALLED_APPS)
+App 1759283 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1759283 output:     app_config.import_models()
+App 1759283 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1759283 output:     self.models_module = import_module(models_module_name)
+App 1759283 output:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1759283 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1759283 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1759283 output:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1759283 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1759283 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1759283 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1759283 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1759283 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1759283 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1759283 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1759283 output:     from celery import current_app, schedules
+App 1759283 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1759283 output:     from celery import Celery
+App 1759283 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1760262 output: tput: No value for $TERM and no -T specified
+App 1760262 output: Traceback (most recent call last):
+App 1760262 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 384, in <module>
+App 1760262 output:     app_module = load_app()
+App 1760262 output:                  ^^^^^^^^^^
+App 1760262 output:   File "/opt/cpanel/ea-ruby27/root/usr/share/passenger/helper-scripts/wsgi-loader.py", line 88, in load_app
+App 1760262 output:     spec.loader.exec_module(app_module)
+App 1760262 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1760262 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1760262 output:   File "/home/gpnbaf79msbm/csass/passenger_wsgi.py", line 22, in <module>
+App 1760262 output:     application = get_wsgi_application()
+App 1760262 output:              
+App 1760262 output:      ^^^^^^^^^^^^^^^^^^^^^^
+App 1760262 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+App 1760262 output:     django.setup(set_prefix=False)
+App 1760262 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+App 1760262 output:     apps.populate(settings.INSTALLED_APPS)
+App 1760262 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/registry.py", line 116, in populate
+App 1760262 output:     app_config.import_models()
+App 1760262 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django/apps/config.py", line 269, in import_models
+App 1760262 output:     self.models_module = import_module(models_module_name)
+App 1760262 output:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1760262 output:   File "/opt/alt/python311/lib64/python3.11/importlib/__init__.py", line 126, in import_module
+App 1760262 output:     return _bootstrap._gcd_import(name[level:], package, level)
+App 1760262 output:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+App 1760262 output:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+App 1760262 output:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+App 1760262 output:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+App 1760262 output:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+App 1760262 output:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+App 1760262 output:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+App 1760262 output:   File "/home/gpnbaf79msbm/virtualenv/csass/3.11/lib/python3.11/site-packages/django_celery_beat/models.py", line 10, in <module>
+App 1760262 output:     from celery import current_app, schedules
+App 1760262 output:   File "/home/gpnbaf79msbm/csass/csass_project/celery.py", line 2, in <module>
+App 1760262 output:     from celery import Celery
+App 1760262 output: ImportError: cannot import name 'Celery' from partially initialized module 'celery' (most likely due to a circular import) (/home/gpnbaf79msbm/csass/csass_project/celery.py)
+App 1774010 output: tput: No value for $TERM and no -T specified
+App 1775209 output: tput: 
+App 1775209 output: No value for $TERM and no -T specified
+App 1785410 output: tput: No value for $TERM and no -T specified
+App 1785578 output: tput: No value for $TERM and no -T specified
+App 1785410 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 1785410 output: Existing user 5: original=True, current=True, should_generate=False
+App 1785410 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 1785410 output: Existing user 5: original=True, current=True, should_generate=False
+App 1785410 output: User 10 (test user) is an active salesman. Created: True
+App 1785410 output: Generating slots for salesman 10 (test user)
+App 1803516 output: tput: No value for $TERM and no -T specified
+App 1803687 output: tput: No value for $TERM and no -T specified
+App 1803516 output: User 10 (test user) is an active salesman. Created: False
+App 1803516 output: Existing user 10: original=True, current=True, should_generate=False
+App 1803516 output: [ pid=1803516, time=2025-10-20 15:14:28,879 ]: Not Found: /favicon.ico
+App 1811184 output: tput: No value for $TERM and no -T specified
+App 1803516 output: User 11 (test user1) is an active salesman. Created: True
+App 1803516 output: Generating slots for salesman 11 (test user1)
+App 1839980 output: tput: No value for $TERM and no -T specified
+App 1839980 output: [ pid=1839980, time=2025-10-20 15:27:01,596 ]: IntegrityError deleting user 10: ("Cannot delete some instances of model 'User' because they are referenced through protected foreign keys: 'Booking.salesman'.", {<Booking: Sandeef Jural with test user on 2025-10-16>})
+App 1839980 output: [ pid=1839980, time=2025-10-20 15:27:06,313 ]: IntegrityError deleting user 10: ("Cannot delete some instances of model 'User' because they are referenced through protected foreign keys: 'Booking.salesman'.", {<Booking: Sandeef Jural with test user on 2025-10-16>})
+App 1785410 output: [ pid=1785410, time=2025-10-20 15:29:54,867 ]: Connection to Redis lost: Retry (0/20) now.
+App 1861651 output: tput: No value for $TERM and no -T specified
+App 1785410 output: [ pid=1785410, time=2025-10-20 15:39:55,466 ]: Connection to Redis lost: Retry (1/20) in 1.00 second.
+App 1803516 output: [ pid=1803516, time=2025-10-20 15:44:05,396 ]: Connection to Redis lost: Retry (0/20) now.
+App 1785410 output: [ pid=1785410, time=2025-10-20 15:49:57,132 ]: Connection to Redis lost: Retry (2/20) in 1.00 second.
+App 1803516 output: [ pid=1803516, time=2025-10-20 15:54:05,904 ]: Connection to Redis lost: Retry (1/20) in 1.00 second.
+App 1785410 output: [ pid=1785410, time=2025-10-20 15:59:58,639 ]: Connection to Redis lost: Retry (3/20) in 1.00 second.
+App 1916007 output: tput: No value for $TERM and no -T specified
+App 1916189 output: tput: No value for $TERM and no -T specified
+App 1916007 output: [ pid=1916007, time=2025-10-20 16:09:05,990 ]: Confirmation email failed for booking 6: No module named 'sendgrid_backend'
+App 1916007 output: User 12 (Patrick Odeh) is an active salesman. Created: True
+App 1916007 output: Generating slots for salesman 12 (Patrick Odeh)
+App 1947021 output: tput: No value for $TERM and no -T specified
+App 1947021 output: [ pid=1947021, time=2025-10-20 16:27:37,765 ]: Confirmation email failed for booking 5: No module named 'sendgrid_backend'
+App 1916007 output: [ pid=1916007, time=2025-10-20 16:36:41,411 ]: Connection to Redis lost: Retry (0/20) now.
+App 2019386 output: tput: No value for $TERM and no -T specified
+App 1916007 output: [ pid=1916007, time=2025-10-20 16:46:41,869 ]: Connection to Redis lost: Retry (1/20) in 1.00 second.
+App 1947021 output: User 13 (Patrick Odeh) is an active salesman. Created: True
+App 1947021 output: Generating slots for salesman 13 (Patrick Odeh)
+App 1947021 output: Celery unavailable for slot generation (user 13): No module named 'celery.contrib.django'. Falling back to local thread.
+App 1947021 output: Using cycle: 2025-10-16 to 2025-10-29
+App 1947021 output: Generating slots for specific salesman: Patrick Odeh (ID: 13)
+App 1947021 output: Created 400 slots for Patrick Odeh
+App 1947021 output: Total slots created: 400
+App 1947021 output: Successfully generated slots for user 13 via fallback
+App 2024255 output: tput: No value for $TERM and no -T specified
+App 2024439 output: tput: No value for $TERM and no -T specified
+App 1947021 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 1947021 output: Existing user 5: original=True, current=True, should_generate=False
+App 1947021 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 1947021 output: Existing user 5: original=True, current=True, should_generate=False
+App 1947021 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 1947021 output: Existing user 5: original=True, current=True, should_generate=False
+App 1947021 output: [ pid=1947021, time=2025-10-20 16:55:56,437 ]: Notification send failed: No module named 'sendgrid_backend'
+App 1916007 output: [ pid=1916007, time=2025-10-20 16:56:43,595 ]: Connection to Redis lost: Retry (2/20) in 1.00 second.
+App 2052520 output: tput: No value for $TERM and no -T specified
+App 2053261 output: tput: No value for $TERM and no -T specified
+App 2078416 output: tput: No value for $TERM and no -T specified
+App 2052520 output: [ pid=2052520, time=2025-10-20 17:13:10,931 ]: Not Found: /media/booking_audio/SPOTIFY-DOWNLOADER_UUmkbtv.COM_Bolek_I_Lolek.mp3
+App 2052520 output: [ pid=2052520, time=2025-10-20 17:13:45,872 ]: Not Found: /media/booking_audio/SPOTIFY-DOWNLOADER_UUmkbtv.COM_Bolek_I_Lolek.mp3

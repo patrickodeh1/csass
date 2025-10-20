@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}Clients - CSASS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h2><i class="bi bi-people"></i> Clients</h2>
+            <p class="text-muted mb-0">Manage all client information and booking history</p>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <form method="get" class="card mb-4 p-3 shadow-sm border-0">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-10">
+                <label class="form-label fw-semibold">Search Clients</label>
+                <input type="text" name="search" class="form-control" 
+                       placeholder="Search by name, business, email, or phone..." 
+                       value="{{ search_query }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <div class="card shadow border-0">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">
+                All Clients ({{ page_obj.paginator.count }})
+                {% if search_query %}
+                <small class="ms-2">- Filtered by "{{ search_query }}"</small>
+                {% endif %}
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Business Name</th>
+                            <th>Contact Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Total Bookings</th>
+                            <th>Confirmed</th>
+                            <th>Created</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for client in page_obj %}
+                        <tr>
+                            <td>
+                                <strong>{{ client.business_name }}</strong>
+                            </td>
+                            <td>{{ client.get_full_name }}</td>
+                            <td>
+                                <a href="mailto:{{ client.email }}">{{ client.email }}</a>
+                            </td>
+                            <td>
+                                <a href="tel:{{ client.phone_number }}">{{ client.phone_number }}</a>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ client.total_bookings }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-success">{{ client.confirmed_bookings }}</span>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ client.created_at|date:"M d, Y" }}</small>
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'client_detail' client.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-5">
+                                <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                <p class="mt-3">
+                                    {% if search_query %}
+                                        No clients found matching "{{ search_query }}"
+                                    {% else %}
+                                        No clients found
+                                    {% endif %}
+                                </p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer bg-light">
+            <nav aria-label="Pagination">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">Last</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

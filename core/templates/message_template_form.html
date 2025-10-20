@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} - CSASS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="text-dark fw-bold display-6">
+                <i class="bi bi-file-text"></i> {{ title }}
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'settings' %}">Settings</a></li>
+                    <li class="breadcrumb-item active">{{ title }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0 text-white fw-semibold">Template Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.message_type.id_for_label }}" class="form-label">
+                                Message Type <span class="text-danger">*</span>
+                            </label>
+                            {{ form.message_type }}
+                            {% if form.message_type.errors %}
+                                <div class="text-danger small">{{ form.message_type.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    Active (messages will only be sent from active templates)
+                                </label>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <h6 class="border-bottom pb-2 mb-3">
+                            <i class="bi bi-envelope"></i> Email Template
+                        </h6>
+
+                        <div class="mb-3">
+                            <label for="{{ form.email_subject.id_for_label }}" class="form-label">
+                                Email Subject <span class="text-danger">*</span>
+                            </label>
+                            {{ form.email_subject }}
+                            {% if form.email_subject.errors %}
+                                <div class="text-danger small">{{ form.email_subject.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.email_body.id_for_label }}" class="form-label">
+                                Email Body (HTML) <span class="text-danger">*</span>
+                            </label>
+                            {{ form.email_body }}
+                            <small class="form-text text-muted">
+                                {{ form.email_body.help_text }}
+                            </small>
+                            {% if form.email_body.errors %}
+                                <div class="text-danger small">{{ form.email_body.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <hr>
+
+                        <h6 class="border-bottom pb-2 mb-3">
+                            <i class="bi bi-phone"></i> SMS Template
+                        </h6>
+
+                        <div class="mb-3">
+                            <label for="{{ form.sms_body.id_for_label }}" class="form-label">
+                                SMS Message <span class="text-danger">*</span>
+                            </label>
+                            {{ form.sms_body }}
+                            <div class="d-flex justify-content-between">
+                                <small class="form-text text-muted">
+                                    {{ form.sms_body.help_text }}
+                                </small>
+                                <small class="text-muted" id="charCount">0 / 320 characters</small>
+                            </div>
+                            {% if form.sms_body.errors %}
+                                <div class="text-danger small">{{ form.sms_body.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'settings' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Save Template
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Preview Card -->
+            <div class="card shadow mb-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="bi bi-eye"></i> Live Preview</h6>
+                </div>
+                <div class="card-body">
+                    <h6 class="small text-muted">Email Subject:</h6>
+                    <div class="border rounded p-2 mb-3 bg-light" id="subjectPreview">
+                        <em class="text-muted">Type to preview...</em>
+                    </div>
+
+                    <h6 class="small text-muted">SMS Message:</h6>
+                    <div class="border rounded p-2 bg-light" id="smsPreview" style="min-height: 60px;">
+                        <em class="text-muted">Type to preview...</em>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Available Variables Card -->
+            <div class="card shadow mb-3">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="bi bi-code-square"></i> Available Variables</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small mb-2">Click to copy:</p>
+                    <div class="d-grid gap-1">
+                        <button class="btn btn-sm btn-outline-secondary text-start" onclick="copyToClipboard('{client_name}')">
+                            <code>{client_name}</code>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary text-start" onclick="copyToClipboard('{salesman_name}')">
+                            <code>{salesman_name}</code>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary text-start" onclick="copyToClipboard('{business_name}')">
+                            <code>{business_name}</code>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary text-start" onclick="copyToClipboard('{appointment_date}')">
+                            <code>{appointment_date}</code>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary text-start" onclick="copyToClipboard('{appointment_time}')">
+                            <code>{appointment_time}</code>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary text-start" onclick="copyToClipboard('{company_name}')">
+                            <code>{company_name}</code>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Example Template Card -->
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Example</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small mb-2"><strong>Email Subject:</strong></p>
+                    <p class="small text-muted mb-3">Thank you, {client_name}!</p>
+
+                    <p class="small mb-2"><strong>Email Body:</strong></p>
+                    <pre class="small text-muted mb-3" style="font-size: 0.75rem;">Hi {client_name},
+
+Thank you for meeting with {salesman_name} on {appointment_date}!
+
+We hope you found value in our discussion about {business_name}.
+
+Best regards,
+{company_name}</pre>
+
+                    <p class="small mb-2"><strong>SMS:</strong></p>
+                    <p class="small text-muted mb-0">Thanks {client_name}! We enjoyed meeting you on {appointment_date}. - {company_name}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Character counter for SMS
+function updateCharCount(textarea) {
+    const count = textarea.value.length;
+    const counter = document.getElementById('charCount');
+    counter.textContent = count + ' / 320 characters';
+    
+    if (count > 320) {
+        counter.classList.add('text-danger');
+        counter.classList.remove('text-muted');
+    } else if (count > 280) {
+        counter.classList.add('text-warning');
+        counter.classList.remove('text-muted', 'text-danger');
+    } else {
+        counter.classList.add('text-muted');
+        counter.classList.remove('text-warning', 'text-danger');
+    }
+}
+
+// Copy to clipboard
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show toast or alert
+        alert('Copied: ' + text);
+    });
+}
+
+// Live preview
+document.addEventListener('DOMContentLoaded', function() {
+    const subjectInput = document.getElementById('{{ form.email_subject.id_for_label }}');
+    const smsInput = document.getElementById('{{ form.sms_body.id_for_label }}');
+    const subjectPreview = document.getElementById('subjectPreview');
+    const smsPreview = document.getElementById('smsPreview');
+    
+    // Update character count on load
+    if (smsInput) {
+        updateCharCount(smsInput);
+    }
+    
+    // Live preview for email subject
+    if (subjectInput) {
+        subjectInput.addEventListener('input', function() {
+            if (this.value.trim()) {
+                subjectPreview.innerHTML = this.value.replace(/\{(\w+)\}/g, '<span class="badge bg-primary">$1</span>');
+            } else {
+                subjectPreview.innerHTML = '<em class="text-muted">Type to preview...</em>';
+            }
+        });
+        
+        // Trigger on load if value exists
+        if (subjectInput.value.trim()) {
+            subjectInput.dispatchEvent(new Event('input'));
+        }
+    }
+    
+    // Live preview for SMS
+    if (smsInput) {
+        smsInput.addEventListener('input', function() {
+            if (this.value.trim()) {
+                smsPreview.innerHTML = this.value.replace(/\{(\w+)\}/g, '<span class="badge bg-success">$1</span>');
+            } else {
+                smsPreview.innerHTML = '<em class="text-muted">Type to preview...</em>';
+            }
+        });
+        
+        // Trigger on load if value exists
+        if (smsInput.value.trim()) {
+            smsInput.dispatchEvent(new Event('input'));
+        }
+    }
+});
+</script>
+{% endblock %}

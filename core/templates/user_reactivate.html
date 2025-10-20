@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Reactivate User - CSASS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-success">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-person-check"></i> Reactivate User</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle-fill"></i> 
+                        <strong>Reactivate User Account</strong> - This will restore the user's access to the system.
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>User Information</h5>
+                        <p class="mb-1"><strong>Name:</strong> {{ user.get_full_name }}</p>
+                        <p class="mb-1"><strong>Email:</strong> {{ user.email }}</p>
+                        <p class="mb-1"><strong>Employee ID:</strong> {{ user.employee_id }}</p>
+                        <p class="mb-1"><strong>Current Status:</strong> 
+                            <span class="badge bg-danger">Inactive</span>
+                        </p>
+                        <p class="mb-1"><strong>Roles:</strong> 
+                            {% for group in user.groups.all %}
+                                <span class="badge bg-secondary">{{ group.name }}</span>
+                            {% endfor %}
+                        </p>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 
+                        <strong>What happens when you reactivate:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>User will be able to log in again</li>
+                            <li>User will regain access to their assigned features</li>
+                            <li>Previous bookings and data will remain intact</li>
+                            <li>Time slots will need to be regenerated if needed</li>
+                        </ul>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-center gap-3">
+                            <button type="submit" class="btn btn-success" 
+                                    onclick="return confirm('Are you sure you want to reactivate {{ user.get_full_name }}?')">
+                                <i class="bi bi-person-check"></i> Reactivate User
+                            </button>
+                            <a href="{% url 'users' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ client.business_name }} - CSASS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <a href="{% url 'clients' %}" class="btn btn-secondary btn-sm mb-2">
+                <i class="bi bi-arrow-left"></i> Back to Clients
+            </a>
+            <h2><i class="bi bi-building"></i> {{ client.business_name }}</h2>
+        </div>
+    </div>
+
+    <!-- Client Information Card -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-person-badge"></i> Contact Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Business Name:</strong> {{ client.business_name }}</p>
+                    <p class="mb-2"><strong>Contact Name:</strong> {{ client.get_full_name }}</p>
+                    <p class="mb-2"><strong>Email:</strong> <a href="mailto:{{ client.email }}">{{ client.email }}</a></p>
+                    <p class="mb-2"><strong>Phone:</strong> <a href="tel:{{ client.phone_number }}">{{ client.phone_number }}</a></p>
+                    <p class="mb-2"><strong>Created:</strong> {{ client.created_at|date:"F d, Y g:i A" }}</p>
+                    <p class="mb-0"><strong>Created By:</strong> {{ client.created_by.get_full_name }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Card -->
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Booking Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <h3 class="text-primary mb-0">{{ total_bookings }}</h3>
+                            <small class="text-muted">Total Bookings</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h3 class="text-success mb-0">{{ confirmed_bookings }}</h3>
+                            <small class="text-muted">Confirmed</small>
+                        </div>
+                        <div class="col-6">
+                            <h3 class="text-warning mb-0">{{ pending_bookings }}</h3>
+                            <small class="text-muted">Pending</small>
+                        </div>
+                        <div class="col-6">
+                            <h3 class="text-danger mb-0">{{ canceled_bookings }}</h3>
+                            <small class="text-muted">Canceled</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes Section -->
+    {% if client.notes %}
+    <div class="card shadow mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-sticky"></i> Notes</h5>
+        </div>
+        <div class="card-body">
+            <p class="mb-0">{{ client.notes }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Booking History -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="bi bi-calendar-check"></i> Booking History</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Salesman</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Created By</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-secondary">{{ booking.appointment_date|date:"M d, Y" }}</span>
+                            </td>
+                            <td><strong>{{ booking.appointment_time|time:"g:i A" }}</strong></td>
+                            <td>{{ booking.salesman.get_full_name }}</td>
+                            <td>
+                                <span class="badge bg-{% if booking.appointment_type == 'zoom' %}info{% else %}primary{% endif %}">
+                                    {% if booking.appointment_type == 'zoom' %}
+                                        <i class="bi bi-camera-video"></i> Zoom
+                                    {% else %}
+                                        <i class="bi bi-geo-alt"></i> In-Person
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                {% if booking.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% elif booking.status == 'confirmed' %}
+                                    <span class="badge bg-success">Confirmed</span>
+                                {% elif booking.status == 'completed' %}
+                                    <span class="badge bg-secondary">Completed</span>
+                                {% elif booking.status == 'canceled' %}
+                                    <span class="badge bg-danger">Canceled</span>
+                                {% elif booking.status == 'no_show' %}
+                                    <span class="badge bg-dark">No Show</span>
+                                {% elif booking.status == 'declined' %}
+                                    <span class="badge bg-danger">Declined</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ booking.created_by.get_full_name }}
+                                <br>
+                                <small class="text-muted">{{ booking.created_at|date:"M d, Y" }}</small>
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'booking_detail' booking.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox"></i> No bookings found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Drip Campaigns -->
+    {% if campaigns %}
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="bi bi-send"></i> Drip Campaigns</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Campaign Type</th>
+                            <th>Booking Date</th>
+                            <th>Started</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for campaign in campaigns %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-{% if campaign.campaign_type == 'attended' %}success{% else %}warning{% endif %}">
+                                    {{ campaign.get_campaign_type_display }}
+                                </span>
+                            </td>
+                            <td>{{ campaign.booking.appointment_date|date:"M d, Y" }}</td>
+                            <td>{{ campaign.started_at|date:"M d, Y" }}</td>
+                            <td>
+                                {% if campaign.is_active and not campaign.is_stopped %}
+                                    <span class="badge bg-success">Active</span>
+                                {% elif campaign.is_stopped %}
+                                    <span class="badge bg-danger">Stopped</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Completed</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'drip_campaigns' %}?booking={{ campaign.booking.id }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

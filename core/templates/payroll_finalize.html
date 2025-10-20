@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Finalize Payroll - CSASS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Finalize Payroll Period</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h5><i class="bi bi-info-circle"></i> Important!</h5>
+                        <p>Finalizing this payroll period will:</p>
+                        <ul>
+                            <li>Lock all bookings in this period (cannot be edited or deleted)</li>
+                            <li>Set the period status to "Finalized"</li>
+                            <li>Record your name and timestamp</li>
+                            <li>This action cannot be undone</li>
+                        </ul>
+                    </div>
+
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h5>Payroll Summary</h5>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <p><strong>Pay Period:</strong></p>
+                                    <p>{{ payroll_period.get_week_label }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Total Commission:</strong></p>
+                                    <p class="fs-4 text-primary">${{ total_commission }}</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Total Bookings:</strong> {{ total_bookings }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Affected Employees:</strong> {{ affected_users }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'payroll' %}" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-lock-fill"></i> Confirm Finalize
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

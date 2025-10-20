@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete User - CSASS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="bi bi-trash"></i> Delete User</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill"></i> 
+                        <strong>Warning!</strong> You are about to permanently delete this user account.
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>User Information</h5>
+                        <p class="mb-1"><strong>Name:</strong> {{ user.get_full_name }}</p>
+                        <p class="mb-1"><strong>Email:</strong> {{ user.email }}</p>
+                        <p class="mb-1"><strong>Employee ID:</strong> {{ user.employee_id }}</p>
+                        <p class="mb-1"><strong>Roles:</strong> 
+                            {% for group in user.groups.all %}
+                                <span class="badge bg-secondary">{{ group.name }}</span>
+                            {% endfor %}
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>Active Data</h5>
+                        <p class="mb-1"><i class="bi bi-calendar-check"></i> <strong>Bookings as Salesman:</strong> {{ bookings_as_salesman }}</p>
+                        <p class="mb-1"><i class="bi bi-person-plus"></i> <strong>Bookings Created:</strong> {{ bookings_as_creator }}</p>
+                        <p class="mb-1"><i class="bi bi-clock"></i> <strong>Time Slots:</strong> {{ timeslots }}</p>
+                        <p class="mb-1"><i class="bi bi-journal-text"></i> <strong>Audit Logs:</strong> {{ audit_logs }}</p>
+                    </div>
+
+                    {% if bookings_as_salesman > 0 or timeslots > 0 %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle"></i> 
+                        This user has active bookings or time slots. You can either:
+                        <ul class="mb-0 mt-2">
+                            <li>Delete without reassignment (bookings will be preserved, slots deactivated)</li>
+                            <li>Reassign all bookings and slots to another salesman before deleting</li>
+                        </ul>
+                    </div>
+
+                    <!-- Reassign Option -->
+                    <form method="post" class="mb-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="reassign_and_delete">
+                        
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <strong>Option 1: Reassign & Delete (Recommended)</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="new_salesman" class="form-label fw-bold">
+                                        Select Salesman to Reassign To *
+                                    </label>
+                                    <select name="new_salesman" id="new_salesman" class="form-select" required>
+                                        <option value="">-- Select Salesman --</option>
+                                        {% for salesman in replacement_salesmen %}
+                                        <option value="{{ salesman.id }}">
+                                            {{ salesman.get_full_name }} ({{ salesman.employee_id }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="form-text text-muted">
+                                        All active bookings and time slots will be transferred to this salesman
+                                    </small>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary w-100" 
+                                        onclick="return confirm('Reassign all bookings/slots to the selected salesman and delete {{ user.get_full_name }}?')">
+                                    <i class="bi bi-arrow-left-right"></i> Reassign & Delete User
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    {% endif %}
+
+                    <!-- Delete Only Option -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete_only">
+                        
+                        <div class="card">
+                            <div class="card-header bg-danger text-white">
+                                <strong>{% if bookings_as_salesman > 0 or timeslots > 0 %}Option 2: {% endif %}Delete Without Reassignment</strong>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-3">
+                                    {% if bookings_as_salesman > 0 or timeslots > 0 %}
+                                    Bookings will be preserved (tied to deleted user). All time slots will be deactivated.
+                                    {% else %}
+                                    User has no active bookings or slots.
+                                    {% endif %}
+                                </p>
+                                <button type="submit" class="btn btn-danger w-100" 
+                                        onclick="return confirm('Are you absolutely sure you want to delete {{ user.get_full_name }}? This action cannot be undone!')">
+                                    <i class="bi bi-trash"></i> Delete User Permanently
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="d-flex justify-content-center mt-4">
+                        <a href="{% url 'users' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

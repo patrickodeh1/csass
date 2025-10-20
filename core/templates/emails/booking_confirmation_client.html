@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #1E1E1E; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #0B1522; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+        .details { background: white; padding: 20px; border-radius: 5px; margin: 20px 0; }
+        .detail-row { display: flex; margin: 10px 0; }
+        .detail-label { font-weight: bold; width: 150px; }
+        .button { display: inline-block; background: #2C5234; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; color: #6b7280; font-size: 12px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Appointment Confirmed</h1>
+        </div>
+        <div class="content">
+            <p>Dear {{ booking.client.first_name }},</p>
+            
+            <p>Your appointment with {{ company_name }} has been confirmed!</p>
+            
+            <div class="details">
+                <h3>Appointment Details</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Date:</span>
+                    <span>{{ booking.appointment_date|date:"l, F d, Y" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Time:</span>
+                    <span>{{ booking.appointment_time|date:"g:i A" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Duration:</span>
+                    <span>{{ booking.duration_minutes }} minutes</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Type:</span>
+                    <span>{{ booking.get_appointment_type_display }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Salesman:</span>
+                    <span>{{ booking.salesman.get_full_name }}</span>
+                </div>
+                {% if booking.zoom_link %}
+                <div class="detail-row">
+                    <span class="detail-label">Zoom Link:</span>
+                    <span><a href="{{ booking.zoom_link }}">{{ booking.zoom_link }}</a></span>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if booking.zoom_link %}
+            <p style="text-align: center;">
+                <a href="{{ booking.zoom_link }}" class="button">Join Zoom Meeting</a>
+            </p>
+            {% endif %}
+            
+            <p>If you need to reschedule or cancel, please contact us as soon as possible.</p>
+            
+            <p>We look forward to meeting with you!</p>
+            
+            <p>Best regards,<br>{{ company_name }} Team</p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message from {{ company_name }}.</p>
+        </div>
+    </div>
+</body>
+</html>

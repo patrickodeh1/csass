@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - CSASS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0"><i class="bi bi-person"></i> {{ title }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <h5 class="border-bottom pb-2 mb-3">Personal Information</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name *</label>
+                                <input type="text" name="first_name" class="form-control" value="{{ form.first_name.value|default:'' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name *</label>
+                                <input type="text" name="last_name" class="form-control" value="{{ form.last_name.value|default:'' }}" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">Email *</label>
+                                <input type="email" name="email" class="form-control" value="{{ form.email.value|default:'' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.username.id_for_label }}" class="form-label">Username *</label>
+                                <input type="text" name="username" class="form-control" value="{{ form.username.value|default:'' }}" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.phone_number.id_for_label }}" class="form-label">Phone Number *</label>
+                                <input type="text" name="phone_number" class="form-control" value="{{ form.phone_number.value|default:'' }}" required>
+                            </div>
+                        </div>
+
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">Employment Information</h5>
+                        <div class="row">
+                            {% if user %}
+                            <!-- Only show employee_id for EXISTING users (read-only) -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Employee ID</label>
+                                <input type="text" class="form-control" value="{{ user.employee_id }}" readonly>
+                                <small class="text-muted">Auto-generated on creation</small>
+                            </div>
+                            {% else %}
+                            <!-- For NEW users, show notice that ID will be auto-generated -->
+                            <div class="col-md-12 mb-3">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> Employee ID will be automatically generated after saving
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.hire_date.id_for_label }}" class="form-label">Hire Date *</label>
+                                <input type="date" name="hire_date" class="form-control" value="{{ form.hire_date.value|default:'' }}" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.commission_rate.id_for_label }}" class="form-label">Commission Rate Override</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" name="commission_rate" class="form-control" step="0.01" value="{{ form.commission_rate.value|default:'' }}" placeholder="Leave blank for system default">
+                                </div>
+                                <small class="form-text text-muted">Leave blank to use system default rate</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Status</label>
+                                <div class="form-check">
+                                    <input type="checkbox" name="is_active" class="form-check-input" id="is_active" {% if form.is_active.value %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_active">Active</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" name="is_active_salesman" class="form-check-input" id="is_active_salesman" {% if form.is_active_salesman.value %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_active_salesman">Active Salesman</label>
+                                </div>
+                            </div>
+                        </div>
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">Agent Payment Details (Optional)</h5>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Please provide your preferred payment method.
+                            <small class="form-text text-muted">{{ form.paypal_email.help_text }}</small><br>
+                            <small class="form-text text-muted">{{ form.bitcoin_wallet_address.help_text }}</small><br>
+                            <small class="form-text text-muted">{{ form.ACH_account_number.help_text }}</small>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.paypal_email.id_for_label }}" class="form-label">PayPal Email</label>
+                                {{ form.paypal_email }}
+                                {% if form.paypal_email.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.paypal_email.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.bitcoin_wallet_address.id_for_label }}" class="form-label">Bitcoin Wallet Address</label>
+                                {{ form.bitcoin_wallet_address }}
+                                {% if form.bitcoin_wallet_address.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.bitcoin_wallet_address.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.ACH_bank_name.id_for_label }}" class="form-label">ACH Bank Name</label>
+                                {{ form.ACH_bank_name }}
+                                {% if form.ACH_bank_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.ACH_bank_name.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.ACH_account_number.id_for_label }}" class="form-label">ACH Account Number</label>
+                                {{ form.ACH_account_number }}
+                                {% if form.ACH_account_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.ACH_account_number.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                         <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.ACH_account_number.id_for_label }}" class="form-label">ACH Routing Number</label>
+                                {{ form.ACH_routing_number }}
+                                {% if form.ACH_routing_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.ACH_routing_number.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">Roles & Permissions</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Assign Roles</label>
+                            <div class="form-check">
+                                <input type="checkbox" name="roles" value="remote_agent" class="form-check-input" id="role_remote_agent"
+                                       {% if 'remote_agent' in form.roles.value %}checked{% endif %}>
+                                <label class="form-check-label" for="role_remote_agent">
+                                    <strong>Remote Agent</strong> - Can book appointments and view own commissions
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" name="roles" value="salesman" class="form-check-input" id="role_salesman"
+                                       {% if 'salesman' in form.roles.value %}checked{% endif %}>
+                                <label class="form-check-label" for="role_salesman">
+                                    <strong>Salesman</strong> - Can manage own availability
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" name="roles" value="admin" class="form-check-input" id="role_admin"
+                                       {% if 'admin' in form.roles.value %}checked{% endif %}>
+                                <label class="form-check-label" for="role_admin">
+                                    <strong>Administrator</strong> - Full system access
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'users' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Save User
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

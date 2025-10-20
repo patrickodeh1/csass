@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load auth_extras %}
+{% block title %}{{ title }} - CSASS{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-10 col-xl-8">
+      <div class="card shadow">
+        <div class="card-header bg-dark text-white">
+          <h4 class="mb-0"><i class="bi bi-calendar-plus"></i> {{ title }}</h4>
+        </div>
+
+        <div class="card-body p-4">
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {{ form.non_field_errors|striptags }}
+              </div>
+            {% endif %}
+
+            <h5 class="border-bottom pb-2 mb-3 text-primary">Client Information</h5>
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label for="{{ form.business_name.id_for_label }}" class="form-label fw-bold">Business Name *</label>
+                {{ form.business_name }}
+                <div class="text-danger small mt-1">{{ form.business_name.errors }}</div>
+              </div>
+              <div class="col-md-6">
+                <label for="{{ form.business_owner.id_for_label }}" class="form-label fw-bold"></label>
+                {{ form.business_owner }}
+                <div class="text-danger small mt-1">{{ form.business_owner.errors }}</div>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label for="{{ form.client_first_name.id_for_label }}" class="form-label fw-bold">First Name *</label>
+                {{ form.client_first_name }}
+                <div class="text-danger small mt-1">{{ form.client_first_name.errors }}</div>
+              </div>
+              <div class="col-md-6">
+                <label for="{{ form.client_last_name.id_for_label }}" class="form-label fw-bold">Last Name *</label>
+                {{ form.client_last_name }}
+                <div class="text-danger small mt-1">{{ form.client_last_name.errors }}</div>
+              </div>
+              <div class="col-md-6">
+                <label for="{{ form.client_email.id_for_label }}" class="form-label fw-bold">Email *</label>
+                {{ form.client_email }}
+                <div class="text-danger small mt-1">{{ form.client_email.errors }}</div>
+              </div>
+              <div class="col-md-6">
+                <label for="{{ form.client_phone.id_for_label }}" class="form-label fw-bold">Phone *</label>
+                {{ form.client_phone }}
+                <div class="text-danger small mt-1">{{ form.client_phone.errors }}</div>
+              </div>
+            </div>
+
+            <h5 class="border-bottom pb-2 mb-3 text-primary">Appointment Details</h5>
+            <div class="row g-3 mb-4">
+              <!-- Salesman Field - Editable for Admin -->
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Salesman *</label>
+                {% if request.user.is_staff %}
+                  {{ form.salesman }}
+                  <div class="text-danger small mt-1">{{ form.salesman.errors }}</div>
+                {% else %}
+                  <input type="text" class="form-control" value="{{ form.salesman.value|default:form.initial.salesman|get_salesman_name }}" readonly disabled>
+                  {{ form.salesman.as_hidden }}
+                {% endif %}
+              </div>
+              
+              <!-- Appointment Type - Editable for Admin -->
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Type *</label>
+                {% if request.user.is_staff %}
+                  {{ form.appointment_type }}
+                  <div class="text-danger small mt-1">{{ form.appointment_type.errors }}</div>
+                {% else %}
+                  <input type="text" class="form-control" value="{{ form.initial.appointment_type|capfirst }}" readonly disabled>
+                  {{ form.appointment_type.as_hidden }}
+                {% endif %}
+              </div>
+
+              <!-- Location Field (for in-person appointments) -->
+              <div class="col-12" id="location-field-wrapper">
+                <label for="{{ form.location.id_for_label }}" class="form-label fw-bold">
+                  State or City {% if form.initial.appointment_type == 'in_person' %}{% endif %}
+                </label>
+                {% if request.user.is_staff %}
+                  {{ form.location }}
+                {% else %}
+                  <input type="text" class="form-control" value="{{ form.location.value|default:'' }}" readonly disabled>
+                  {{ form.location.as_hidden }}
+                {% endif %}
+                <div class="text-danger small mt-1">{{ form.location.errors }}</div>
+                <small class="form-text text-muted">Location is required for in-person appointments</small>
+              </div>
+
+              <!-- Date Field - Editable for Admin -->
+              <div class="col-md-4">
+                <label class="form-label fw-bold">Date *</label>
+                {% if request.user.is_staff %}
+                  {{ form.appointment_date }}
+                  <div class="text-danger small mt-1">{{ form.appointment_date.errors }}</div>
+                {% else %}
+                  <input type="text" class="form-control" value="{{ form.appointment_date.value|default:form.initial.appointment_date }}" readonly disabled>
+                  {{ form.appointment_date.as_hidden }}
+                  <div class="text-danger small mt-1">{{ form.appointment_date.errors }}</div>
+                {% endif %}
+              </div>
+              
+              <!-- Time Field - Editable for Admin -->
+              <div class="col-md-4">
+                <label class="form-label fw-bold">Time *</label>
+                {% if request.user.is_staff %}
+                  {{ form.appointment_time }}
+                  <div class="text-danger small mt-1">{{ form.appointment_time.errors }}</div>
+                {% else %}
+                  <input type="text" class="form-control" value="{{ form.appointment_time.value|default:form.initial.appointment_time|time:'g:i A' }}" readonly disabled>
+                  {{ form.appointment_time.as_hidden }}
+                  <div class="text-danger small mt-1">{{ form.appointment_time.errors }}</div>
+                {% endif %}
+              </div>
+              
+              <div class="col-md-4">
+                <label class="form-label fw-bold">Duration *</label>
+                <input type="text" class="form-control" value="{{ form.duration_minutes.value|default:form.initial.duration_minutes }} min" readonly disabled>
+                {{ form.duration_minutes.as_hidden }}
+                <div class="text-danger small mt-1">{{ form.duration_minutes.errors }}</div>
+              </div>
+
+              <!-- Zoom Link - Editable for Admin -->
+              <div class="col-12" id="zoom-field-wrapper" style="display: none;">
+                <label for="{{ form.zoom_link.id_for_label }}" class="form-label fw-bold">Meeting Link *</label>
+                {% if request.user.is_staff %}
+                  {{ form.zoom_link }}
+                {% else %}
+                  <input type="text" class="form-control" value="{{ form.zoom_link.value|default:'' }}" readonly disabled>
+                  {{ form.zoom_link.as_hidden }}
+                {% endif %}
+                <div class="text-danger small mt-1">{{ form.zoom_link.errors }}</div>
+              </div>
+              
+              <!-- Meeting Address - Editable for Admin and remote agent-->
+              <div class="col-12" id="address-field-wrapper" style="display: none;">
+                <label for="{{ form.meeting_address.id_for_label }}" class="form-label fw-bold">Meeting Address *</label>
+                {{ form.meeting_address }}
+                <!--{% if request.user.is_staff %}
+                  {{ form.meeting_address }}
+                {% else %}
+                  <textarea class="form-control"  >{{ form.meeting_address.value|default:'' }}</textarea>
+                  {{ form.meeting_address }}
+                {% endif %}
+                <div class="text-danger small mt-1">{{ form.meeting_address.errors }}</div>-->
+              </div>
+              
+              <div class="col-12">
+                <label for="{{ form.notes.id_for_label }}" class="form-label fw-bold">Notes</label>
+                {{ form.notes }}
+                <div class="text-danger small mt-1">{{ form.notes.errors }}</div>
+              </div>
+              
+              {% if request.user.is_staff %}
+              <div class="col-12">
+                <label for="{{ form.audio_file.id_for_label }}" class="form-label fw-bold">Audio (Admin only)</label>
+                {{ form.audio_file }}
+                <div class="text-danger small mt-1">{{ form.audio_file.errors }}</div>
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 border-top pt-3">
+              <a href="{% url 'calendar' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Cancel
+              </a>
+              <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-check-circle"></i> Save Booking
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const appointmentType = "{{ form.initial.appointment_type|escapejs }}";
+  const zoomFieldWrapper = document.getElementById("zoom-field-wrapper");
+  const addressFieldWrapper = document.getElementById("address-field-wrapper");
+  const locationFieldWrapper = document.getElementById("location-field-wrapper");
+
+  function updateFieldVisibility(type) {
+    if (type === "zoom") {
+      zoomFieldWrapper.style.display = "block";
+      addressFieldWrapper.style.display = "none";
+      locationFieldWrapper.style.display = "none";
+    } else if (type === "in_person") {
+      zoomFieldWrapper.style.display = "none";
+      addressFieldWrapper.style.display = "block";
+      locationFieldWrapper.style.display = "block";
+    }
+  }
+
+  // Initial setup
+  updateFieldVisibility(appointmentType);
+
+  // Listen for changes (if admin is editing)
+  const typeField = document.querySelector('[name="appointment_type"]');
+  if (typeField && !typeField.disabled) {
+    typeField.addEventListener('change', function() {
+      updateFieldVisibility(this.value);
+    });
+  }
+});
+</script>
+{% endblock %}

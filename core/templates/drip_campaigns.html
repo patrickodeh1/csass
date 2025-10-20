@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% block title %}Drip Campaigns - CSASS{% endblock %}
+{% load math_filters %} 
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h2 class="text-dark fw-bold display-6">
+                <i class="bi bi-send"></i> Drip Campaigns
+            </h2>
+            <p class="text-muted mb-0">Manage automated follow-up campaigns for clients</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="card mb-4 p-3 shadow-sm border-0">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Campaign Type</label>
+                <select name="type" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Types</option>
+                    <option value="attended" {% if campaign_type == 'attended' %}selected{% endif %}>AD (Attended) - 21 Days</option>
+                    <option value="did_not_attend" {% if campaign_type == 'did_not_attend' %}selected{% endif %}>DNA (Did Not Attend) - 90 Days</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="stopped" {% if status == 'stopped' %}selected{% endif %}>Stopped</option>
+                    <option value="completed" {% if status == 'completed' %}selected{% endif %}>Completed</option>
+                </select>
+            </div>
+        </div>
+    </form>
+
+    <!-- Campaigns Table -->
+    <div class="card shadow border-0">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Active Campaigns ({{ page_obj.paginator.count }} total)</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Client</th>
+                            <th>Business</th>
+                            <th>Type</th>
+                            <th>Started</th>
+                            <th>Progress</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for campaign in page_obj %}
+                        <tr>
+                            <td>
+                                <strong>{{ campaign.booking.client.get_full_name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ campaign.booking.client.email }}</small>
+                            </td>
+                            <td>{{ campaign.booking.client.business_name }}</td>
+                            <td>
+                                {% if campaign.campaign_type == 'attended' %}
+                                    <span class="badge bg-success">AD (21 Days)</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">DNA (90 Days)</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ campaign.started_at|date:"M d, Y" }}</small>
+                            </td>
+                            <td>
+                                <td>
+                                    {% with sent=campaign.sent_messages total=campaign.total_messages %}
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar" role="progressbar" 
+                                            style="width: {% if total > 0 %}{{ sent|div:total }}{% else %}0{% endif %}%">
+                                            {{ sent }} / {{ total }}
+                                        </div>
+                                    </div>
+                                    {% endwith %}
+                                </td>
+                                
+                            <td>
+                                {% if campaign.is_stopped %}
+                                    <span class="badge bg-danger">Stopped</span>
+                                {% elif campaign.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Completed</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    {% if campaign.is_active and not campaign.is_stopped %}
+                                        <a href="{% url 'drip_campaign_stop' campaign.id %}" class="btn btn-outline-danger" title="Stop Campaign">
+                                            <i class="bi bi-stop-circle"></i>
+                                        </a>
+                                    {% elif campaign.is_stopped %}
+                                        <a href="{% url 'drip_campaign_resume' campaign.id %}" class="btn btn-outline-success" title="Resume Campaign">
+                                            <i class="bi bi-play-circle"></i>
+                                        </a>
+                                    {% endif %}
+                                    <button type="button" class="btn btn-outline-primary" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#campaignModal{{ campaign.id }}"
+                                            title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Campaign Details Modal -->
+                        <div class="modal fade" id="campaignModal{{ campaign.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Campaign Details - {{ campaign.booking.client.get_full_name }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <h6>Scheduled Messages:</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Template</th>
+                                                        <th>Scheduled For</th>
+                                                        <th>Status</th>
+                                                        <th>Sent At</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for msg in campaign.scheduled_messages.all %}
+                                                    <tr>
+                                                        <td>{{ msg.message_template.get_message_type_display }}</td>
+                                                        <td>{{ msg.scheduled_for|date:"M d, Y g:i A" }}</td>
+                                                        <td>
+                                                            {% if msg.status == 'sent' %}
+                                                                <span class="badge bg-success">Sent</span>
+                                                            {% elif msg.status == 'pending' %}
+                                                                <span class="badge bg-warning">Pending</span>
+                                                            {% elif msg.status == 'failed' %}
+                                                                <span class="badge bg-danger">Failed</span>
+                                                            {% else %}
+                                                                <span class="badge bg-secondary">Canceled</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if msg.sent_at %}
+                                                                {{ msg.sent_at|date:"M d, Y g:i A" }}
+                                                            {% else %}
+                                                                -
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                <p class="mt-2">No drip campaigns found</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer bg-light">
+            <nav aria-label="Campaigns pagination">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if campaign_type %}&type={{ campaign_type }}{% endif %}{% if status %}&status={{ status }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if campaign_type %}&type={{ campaign_type }}{% endif %}{% if status %}&status={{ status }}{% endif %}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if campaign_type %}&type={{ campaign_type }}{% endif %}{% if status %}&status={{ status }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if campaign_type %}&type={{ campaign_type }}{% endif %}{% if status %}&status={{ status }}{% endif %}">Last</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Info Card -->
+    <div class="card shadow mt-4">
+        <div class="card-header bg-info text-white">
+            <h6 class="mb-0"><i class="bi bi-info-circle"></i> About Drip Campaigns</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6><span class="badge bg-success">AD (Attended)</span></h6>
+                    <p class="small mb-2">21-day follow-up campaign for clients who attended their appointment:</p>
+                    <ul class="small">
+                        <li>Day 1: Thank you message</li>
+                        <li>Day 7: Follow-up check-in</li>
+                        <li>Day 14: Engagement message</li>
+                        <li>Day 21: Final follow-up</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6><span class="badge bg-warning text-dark">DNA (Did Not Attend)</span></h6>
+                    <p class="small mb-2">90-day re-engagement campaign for no-shows:</p>
+                    <ul class="small">
+                        <li>Day 1: We missed you message</li>
+                        <li>Day 7: Reschedule offer</li>
+                        <li>Day 30: Value reminder</li>
+                        <li>Day 60: Special offer</li>
+                        <li>Day 90: Last chance message</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

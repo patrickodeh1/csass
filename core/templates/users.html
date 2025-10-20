@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+
+{% block title %}User Management - CSASS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .password-cell {
+        font-family: monospace;
+        min-width: 150px;
+    }
+    .password-hidden {
+        letter-spacing: 2px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-people"></i> User Management</h2>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'user_create' %}" class="btn btn-primary">
+                <i class="bi bi-person-plus"></i> Add User
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Role</label>
+                    <select name="role" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Roles</option>
+                        <option value="remote_agent" {% if role_filter == 'remote_agent' %}selected{% endif %}>Remote Agent</option>
+                        <option value="salesman" {% if role_filter == 'salesman' %}selected{% endif %}>Salesman</option>
+                        <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Administrator</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select" onchange="this.form.submit()">
+                        <option value="">All</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Employee ID</th>
+                            <th>Password</th>
+                            <th>Roles</th>
+                            <th>Status</th>
+                            <th>Hire Date</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr {% if not user.is_active %}class="text-muted"{% endif %}>
+                            <td>
+                                <strong>{{ user.get_full_name }}</strong>
+                                {% if user.is_active_salesman %}
+                                <span class="badge bg-info ms-2">Salesman</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td><code>{{ user.employee_id }}</code></td>
+                            <td class="password-cell">
+                                {% if user.plain_text_password %}
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="password-text password-hidden" id="pwd-{{ user.id }}" data-password="{{ user.plain_text_password }}">
+                                        ••••••••
+                                    </span>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary toggle-password" 
+                                            data-target="pwd-{{ user.id }}"
+                                            title="Show/Hide Password">
+                                        <i class="bi bi-eye" id="icon-{{ user.id }}"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary copy-password" 
+                                            data-password="{{ user.plain_text_password }}"
+                                            title="Copy Password">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                                {% else %}
+                                <span class="text-muted small">Not stored</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% for group in user.groups.all %}
+                                <span class="badge bg-secondary">{{ group.name }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if user.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.hire_date|date:"M d, Y" }}</td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'user_edit' user.id %}" class="btn btn-outline-primary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    
+                                    {% if user.is_active %}
+                                        <a href="{% url 'user_deactivate' user.id %}" class="btn btn-outline-warning" 
+                                        title="Deactivate User"
+                                        onclick="return confirm('Are you sure you want to deactivate {{ user.get_full_name }}?')">
+                                            <i class="bi bi-person-x"></i>
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'user_reactivate' user.id %}" class="btn btn-outline-success" 
+                                        title="Reactivate User"
+                                        onclick="return confirm('Are you sure you want to reactivate {{ user.get_full_name }}?')">
+                                            <i class="bi bi-person-check"></i>
+                                        </a>
+                                    {% endif %}
+                                    
+                                    <a href="{% url 'user_delete' user.id %}" class="btn btn-outline-danger" 
+                                    title="Delete User"
+                                    onclick="return confirm('Are you sure you want to delete {{ user.get_full_name }}? This action may require reassignment of bookings/slots.')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">
+                                <i class="bi bi-people" style="font-size: 2rem;"></i>
+                                <p class="mt-2">No users found</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        <!-- Remote Agents Payment Details Table -->
+    <div class="mt-5">
+        <div class="row mb-4">
+            <div class="col">
+                <h3><i class="bi bi-credit-card"></i> Remote Agents Payment Details</h3>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Employee ID</th>
+                                <th>PayPal Email</th>
+                                <th>Bitcoin Wallet</th>
+                                <th>ACH Bank Name</th>
+                                <th>ACH Account Number</th>
+                                <th>ACH Routing Number</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in agents %}
+                            <tr {% if not user.is_active %}class="text-muted"{% endif %}>
+                                <td>
+                                    <strong>{{ user.get_full_name }}</strong>
+                                </td>
+                                <td><code>{{ user.employee_id }}</code></td>
+                                <td>
+                                    {% if user.paypal_email %}
+                                    <span class="text-break">{{ user.paypal_email }}</span>
+                                    {% else %}
+                                    <span class="text-muted small">Not provided</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.bitcoin_wallet_address %}
+                                    <code class="text-break" style="font-size: 0.85rem;">{{ user.bitcoin_wallet_address }}</code>
+                                    {% else %}
+                                    <span class="text-muted small">Not provided</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.ACH_bank_name %}
+                                    <code>{{ user.ACH_bank_name }}</code>
+                                    {% else %}
+                                    <span class="text-muted small">Not provided</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.ACH_account_number %}
+                                    <code>{{ user.ACH_account_number }}</code>
+                                    {% else %}
+                                    <span class="text-muted small">Not provided</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.ACH_routing_number %}
+                                    <code>{{ user.ACH_routing_number }}</code>
+                                    {% else %}
+                                    <span class="text-muted small">Not provided</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'user_edit' user.id %}" class="btn btn-outline-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                    <p class="mt-2">No remote agents found</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle password visibility
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.dataset.target;
+            const passwordSpan = document.getElementById(targetId);
+            const icon = document.getElementById('icon-' + targetId.split('-')[1]);
+            const password = passwordSpan.dataset.password;
+            
+            if (passwordSpan.classList.contains('password-hidden')) {
+                // Show password
+                passwordSpan.textContent = password;
+                passwordSpan.classList.remove('password-hidden');
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                // Hide password
+                passwordSpan.textContent = '••••••••';
+                passwordSpan.classList.add('password-hidden');
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
+    });
+    
+    // Copy password to clipboard
+    document.querySelectorAll('.copy-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const password = this.dataset.password;
+            
+            // Create temporary input to copy
+            const tempInput = document.createElement('input');
+            tempInput.value = password;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            
+            // Show feedback
+            const originalIcon = this.querySelector('i');
+            originalIcon.classList.remove('bi-clipboard');
+            originalIcon.classList.add('bi-check-lg');
+            this.classList.remove('btn-outline-primary');
+            this.classList.add('btn-success');
+            
+            setTimeout(() => {
+                originalIcon.classList.remove('bi-check-lg');
+                originalIcon.classList.add('bi-clipboard');
+                this.classList.remove('btn-success');
+                this.classList.add('btn-outline-primary');
+            }, 2000);
+        });
+    });
+});
+</script>
+{% endblock %}

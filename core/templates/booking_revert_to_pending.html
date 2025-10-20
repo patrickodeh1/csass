@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Revert Booking to Pending - CSASS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Revert to Pending</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning mb-4">
+                        <p class="mb-0">
+                            <strong>Caution:</strong> This will change the booking status from 
+                            <strong>Confirmed</strong> back to <strong>Pending</strong> and will clear the approval information.
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">Booking Information</h6>
+                        <p class="mb-2">
+                            <strong>Client:</strong> {{ booking.client.get_full_name }}
+                        </p>
+                        <p class="mb-2">
+                            <strong>Salesman:</strong> {{ booking.salesman.get_full_name }}
+                        </p>
+                        <p class="mb-2">
+                            <strong>Appointment:</strong> {{ booking.appointment_date|date:"l, F d, Y" }} at {{ booking.appointment_time|date:"g:i A" }}
+                        </p>
+                        {% if booking.approved_by %}
+                        <p class="mb-2">
+                            <strong>Currently Approved By:</strong> {{ booking.approved_by.get_full_name }}<br>
+                            <small class="text-muted">{{ booking.approved_at|date:"M d, Y g:i A" }}</small>
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="revert_reason" class="form-label">
+                                <strong>Reason for Reverting (Optional)</strong>
+                            </label>
+                            <textarea 
+                                id="revert_reason"
+                                name="revert_reason"
+                                class="form-control"
+                                rows="3"
+                                placeholder="Explain why this booking is being reverted to pending..."
+                            ></textarea>
+                            <small class="form-text text-muted">This will be recorded in the audit log for record-keeping.</small>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-between">
+                            <a href="{% url 'booking_detail' booking.id %}" class="btn btn-secondary">
+                                <i class="bi bi-x"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-warning" onclick="return confirm('Are you sure you want to revert this booking to pending? This will clear all approval information.')">
+                                <i class="bi bi-arrow-counterclockwise"></i> Revert to Pending
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

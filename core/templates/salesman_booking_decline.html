@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Decline My Booking - CSASS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="bi bi-x-circle"></i> Decline My Booking</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        <strong>Are you sure you want to decline this booking?</strong>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Client:</strong><br>
+                            {{ booking.client.get_full_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Salesman:</strong><br>
+                            {{ booking.salesman.get_full_name }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <strong>Appointment:</strong><br>
+                            {{ booking.appointment_date|date:"F d, Y" }} at {{ booking.appointment_time|date:"g:i A" }}
+                        </div>
+                    </div>
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="decline_reason" class="form-label fw-bold">
+                                Reason for Declining * <span class="text-danger">(Required)</span>
+                            </label>
+                            <textarea name="decline_reason" id="decline_reason" class="form-control" rows="4" required 
+                                      placeholder="Please provide a detailed reason for declining this booking. This will be sent to the remote agent."></textarea>
+                            <small class="form-text text-muted">
+                                Be specific about why this booking cannot be approved (e.g., scheduling conflict, invalid information, etc.)
+                            </small>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'salesman_pending_bookings' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-x-circle"></i> Decline Booking
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block title %}My Commissions - CSASS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4"><i class="bi bi-currency-dollar"></i> My Commissions</h2>
+
+    <!-- Week Selector -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <label class="form-label">Select Pay Period:</label>
+                    <select class="form-select" onchange="window.location.href='?week=' + this.value">
+                        {% for week in available_weeks %}
+                        <option value="{{ forloop.counter0 }}" {% if week_offset == forloop.counter0 %}selected{% endif %}>
+                            {{ week.label }}
+                            {% if week.is_finalized %}(Finalized){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Confirmed Earnings</h5>
+                    <h2 class="display-4 mb-0">${{ total_commission }}</h2>
+                    <small>{{ total_bookings }} bookings</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark shadow">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Pending Approval</h5>
+                    <h2 class="display-4 mb-0">${{ pending_commission }}</h2>
+                    <small>{{ pending_count }} booking{{ pending_count|pluralize }}</small>
+                </div>
+            </div>
+        </div>
+        {% if declined_count > 0 %}
+        <div class="col-md-3">
+            <div class="card bg-danger text-white shadow">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Declined</h5>
+                    <h2 class="display-4 mb-0">{{ declined_count }}</h2>
+                    <small>booking{{ declined_count|pluralize }}</small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        <div class="col-md-3">
+            <div class="card bg-info text-white shadow">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Pay Period</h5>
+                    <p class="mb-0">{{ start_date|date:"M d" }} - {{ end_date|date:"M d, Y" }}</p>
+                    {% if payroll_period and payroll_period.status == 'finalized' %}
+                    <span class="badge bg-light text-dark mt-2">
+                        <i class="bi bi-lock-fill"></i> Finalized
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Notice -->
+    {% if pending_count > 0 %}
+    <div class="alert alert-warning" role="alert">
+        <i class="bi bi-hourglass-split"></i>
+        <strong>{{ pending_count }} booking{{ pending_count|pluralize }} pending approval</strong> 
+        - Pending bookings will count toward your commission once approved by admin.
+    </div>
+    {% endif %}
+
+    <!-- Bookings Table -->
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Booking Details</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Client</th>
+                            <th>Salesman</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th class="text-end">Commission</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr class="{% if booking.status == 'declined' %}table-danger{% elif booking.status == 'pending' %}table-warning{% endif %}">
+                            <td>{{ booking.appointment_date|date:"M d, Y" }}</td>
+                            <td>{{ booking.appointment_time|date:"g:i A" }}</td>
+                            <td>
+                                {{ booking.client.first_name }} {{ booking.client.last_name|first }}.
+                                <br><small class="text-muted">{{ booking.client.email }}</small>
+                            </td>
+                            <td>{{ booking.salesman.get_full_name }}</td>
+                            <td>
+                                <span class="badge bg-{% if booking.appointment_type == 'zoom' %}primary{% else %}warning text-dark{% endif %}">
+                                    {{ booking.get_appointment_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if booking.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-hourglass-split"></i> Pending Approval
+                                    </span>
+                                {% elif booking.status == 'confirmed' %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Confirmed
+                                    </span>
+                                {% elif booking.status == 'completed' %}
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-check-circle-fill"></i> Completed
+                                    </span>
+                                {% elif booking.status == 'declined' %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-x-circle"></i> Declined
+                                    </span>
+                                    {% if booking.decline_reason %}
+                                    <br><small class="text-muted">{{ booking.decline_reason|truncatewords:10 }}</small>
+                                    {% endif %}
+                                {% elif booking.status == 'canceled' %}
+                                    <span class="badge bg-dark">
+                                        <i class="bi bi-slash-circle"></i> Canceled
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if booking.counts_for_commission %}
+                                    <strong class="text-success">${{ booking.commission_amount }}</strong>
+                                {% elif booking.status == 'pending' %}
+                                    <span class="text-warning">${{ booking.commission_amount }}</span>
+                                    <br><small class="text-muted">(pending)</small>
+                                {% else %}
+                                    <span class="text-muted">$0.00</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                <p class="mt-2">No bookings for this period</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th colspan="6" class="text-end">Confirmed Commission:</th>
+                            <th class="text-end text-success">${{ total_commission }}</th>
+                        </tr>
+                        {% if pending_commission > 0 %}
+                        <tr>
+                            <th colspan="6" class="text-end">Pending Approval:</th>
+                            <th class="text-end text-warning">${{ pending_commission }}</th>
+                        </tr>
+                        <tr class="table-info">
+                            <th colspan="6" class="text-end">Potential Total:</th>
+                            <th class="text-end">${{ total_commission|add:pending_commission }}</th>
+                        </tr>
+                        {% endif %}
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Text -->
+    <div class="mt-3">
+        <small class="text-muted">
+            <i class="bi bi-info-circle"></i>
+            <strong>Commission Status:</strong>
+            <span class="badge bg-success ms-2">Confirmed</span> = Counts toward your earnings |
+            <span class="badge bg-warning text-dark ms-2">Pending</span> = Awaiting admin approval |
+            <span class="badge bg-danger ms-2">Declined</span> = Not approved
+        </small>
+    </div>
+</div>
+{% endblock %}

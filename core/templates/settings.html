@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block title %}System Settings - CSASS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="text-dark fw-bold display-6"><i class="bi bi-sliders"></i> System Settings</h2>
+        </div>
+    </div>
+
+    <!-- Nav Tabs -->
+    <ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button">
+                <i class="bi bi-gear"></i> General
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="templates-tab" data-bs-toggle="tab" data-bs-target="#templates" type="button">
+                <i class="bi bi-file-text"></i> Message Templates
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="settingsTabContent">
+        <!-- General Settings Tab -->
+        <div class="tab-pane fade show active" id="general" role="tabpanel">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card shadow">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0 text-white fw-semibold fs-4">General Configuration</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                
+                                <h6 class="border-bottom pb-2 mb-3">Company Settings</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">Company Name</label>
+                                    {{ form.company_name }}
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Timezone</label>
+                                    {{ form.timezone }}
+                                    <small class="form-text text-muted">e.g., America/New_York, UTC</small>
+                                </div>
+
+                                <h6 class="border-bottom pb-2 mb-3 mt-4">Commission Settings</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">In-Person Commission ($)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            {{ form.default_commission_rate_in_person }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Zoom Commission ($)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            {{ form.default_commission_rate_zoom }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h6 class="border-bottom pb-2 mb-3 mt-4">Zoom Settings</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">Default Zoom Link</label>
+                                    {{ form.zoom_link }}
+                                </div>
+                                <h6 class="border-bottom pb-2 mb-3 mt-4">Appointment Type Settings</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="form-check form-switch">
+                                            {{ form.zoom_enabled }}
+                                            <label class="form-check-label" for="{{ form.zoom_enabled.id_for_label }}">
+                                                <strong>Enable Zoom Appointments</strong>
+                                            </label>
+                                        </div>
+                                        <small class="form-text text-muted d-block mt-2">
+                                            {{ form.zoom_enabled.help_text }}
+                                        </small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="form-check form-switch">
+                                            {{ form.in_person_enabled }}
+                                            <label class="form-check-label" for="{{ form.in_person_enabled.id_for_label }}">
+                                                <strong>Enable In-Person Appointments</strong>
+                                            </label>
+                                        </div>
+                                        <small class="form-text text-muted d-block mt-2">
+                                            {{ form.in_person_enabled.help_text }}
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <h6 class="border-bottom pb-2 mb-3 mt-4">Notification Settings</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">Reminder Lead Time (hours)</label>
+                                    {{ form.reminder_lead_time_hours }}
+                                    <small class="form-text text-muted">Send reminder X hours before appointment</small>
+                                </div>
+
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button type="submit" name="save_general" class="btn btn-primary">
+                                        <i class="bi bi-save"></i> Save Settings
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-dark text-white">
+                            <h6 class="mb-0">Current Configuration</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-2"><strong>Company:</strong> {{ config.company_name }}</p>
+                            <p class="mb-2"><strong>In-Person:</strong> ${{ config.default_commission_rate_in_person }}</p>
+                            <p class="mb-2"><strong>Zoom:</strong> ${{ config.default_commission_rate_zoom }}</p>
+                            <p class="mb-0"><strong>Last Updated:</strong><br>
+                                <small>{{ config.updated_at|date:"M d, Y g:i A" }}</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Templates Tab -->
+        <div class="tab-pane fade" id="templates" role="tabpanel">
+            <!-- CSV Upload Section -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0 text-white fw-semibold fs-4">
+                        <i class="bi bi-upload"></i> Bulk Upload Templates
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="hidden" name="csv_upload" value="1">
+                                
+                                <div class="mb-3">
+                                    <label for="{{ csv_form.csv_file.id_for_label }}" class="form-label fw-bold">
+                                        Upload CSV File
+                                    </label>
+                                    {{ csv_form.csv_file }}
+                                    <div class="form-text">
+                                        <strong>CSV Format:</strong> message_type, email_subject, email_body, sms_body, is_active<br>
+                                        <strong>Valid message types:</strong> booking_approved_agent, booking_approved_client, booking_approved_salesman, booking_reminder_client, booking_reminder_salesman, ad_day_1, ad_day_7, ad_day_14, ad_day_21, dna_day_1, dna_day_7, dna_day_30, dna_day_60, dna_day_90<br>
+                                        <strong>Variables:</strong> {client_name}, {salesman_name}, {business_name}, {appointment_date}, {appointment_time}, {company_name}
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-info">
+                                    <i class="bi bi-upload"></i> Upload CSV
+                                </button>
+                                <a href="/static/sample_message_templates.csv" class="btn btn-outline-info ms-2" download>
+                                    <i class="bi bi-download"></i> Download Sample CSV
+                                </a>
+                            </form>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="alert alert-light">
+                                <h6><i class="bi bi-info-circle"></i> CSV Upload Tips:</h6>
+                                <ul class="mb-0 small">
+                                    <li>First row should contain column headers</li>
+                                    <li>Use double quotes for text with commas</li>
+                                    <li>is_active can be: true, false, 1, 0, yes, no</li>
+                                    <li>Existing templates will be updated</li>
+                                    <li>New templates will be created</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Templates List -->
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white fw-semibold fs-4">
+                        <i class="bi bi-file-text"></i> Message Templates
+                    </h5>
+                    <a href="{% url 'message_template_create' %}" class="btn btn-sm btn-light">
+                        <i class="bi bi-plus-circle"></i> New Template
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Template Type</th>
+                                    <th>Email Subject</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for template in message_templates %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ template.get_message_type_display }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ template.message_type }}</small>
+                                    </td>
+                                    <td>{{ template.email_subject|truncatechars:50 }}</td>
+                                    <td>
+                                        {% if template.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'message_template_edit' template.id %}" class="btn btn-outline-primary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{% url 'message_template_delete' template.id %}" class="btn btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                        <p class="mt-2">No message templates configured yet</p>
+                                        <a href="{% url 'message_template_create' %}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-plus-circle"></i> Create First Template
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Available Variables Help -->
+            <div class="card shadow mt-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Available Template Variables</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">Use these variables in your email and SMS templates:</p>
+                    <ul class="list-unstyled mb-0">
+                        <li><code>{client_name}</code> - Client's full name</li>
+                        <li><code>{salesman_name}</code> - Salesman's full name</li>
+                        <li><code>{business_name}</code> - Client's business name</li>
+                        <li><code>{appointment_date}</code> - Appointment date (formatted)</li>
+                        <li><code>{appointment_time}</code> - Appointment time (formatted)</li>
+                        <li><code>{company_name}</code> - Your company name</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Preserve active tab on page reload
+document.addEventListener('DOMContentLoaded', function() {
+    const activeTab = localStorage.getItem('activeSettingsTab');
+    if (activeTab) {
+        const tabTrigger = new bootstrap.Tab(document.querySelector(`#${activeTab}-tab`));
+        tabTrigger.show();
+    }
+    
+    // Save active tab
+    document.querySelectorAll('#settingsTabs button').forEach(button => {
+        button.addEventListener('click', function() {
+            localStorage.setItem('activeSettingsTab', this.id.replace('-tab', ''));
+        });
+    });
+});
+</script>
+{% endblock %}

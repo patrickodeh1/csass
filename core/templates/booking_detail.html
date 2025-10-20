@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Details - CSASS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="bi bi-info-circle"></i> Booking Details</h4>
+                    <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'completed' %}secondary{% elif booking.status == 'pending' %}warning{% else %}danger{% endif %}">
+                        {{ booking.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Client Information</h6>
+                            <p class="mb-2"><strong>Business Name:</strong> {{ booking.client.business_name }}</p>
+                            <p class="mb-2"><strong>Name:</strong> {{ booking.client.first_name }} {{ booking.client.last_name }}</p>
+                            <p class="mb-2"><strong>Email:</strong> {{ booking.client.email }}</p>
+                            <p class="mb-2"><strong>Phone:</strong> {{ booking.client.phone_number }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Appointment Details</h6>
+                            <p class="mb-2"><strong>Date:</strong> {{ booking.appointment_date|date:"l, F d, Y" }}</p>
+                            <p class="mb-2"><strong>Time:</strong> {{ booking.appointment_time|date:"g:i A" }}</p>
+                            <p class="mb-2"><strong>Duration:</strong> {{ booking.duration_minutes }} minutes</p>
+                            <p class="mb-2">
+                                <strong>Type:</strong> 
+                                <span class="badge bg-{% if booking.appointment_type == 'zoom' %}primary{% else %}warning{% endif %}">
+                                    {{ booking.get_appointment_type_display }}
+                                </span>
+                            </p>
+                            
+                            {% if booking.zoom_link %}
+                            <p class="mb-2">
+                                <strong>Zoom Link:</strong> 
+                                <a href="{{ booking.zoom_link }}" target="_blank">{{ booking.zoom_link }}</a>
+                            </p>
+                            {% endif %}
+
+                            {% if booking.meeting_address %}
+                            <p class="mb-2">
+                                <strong>Meeting Address:</strong> 
+                                {{ booking.meeting_address }}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Salesman</h6>
+                            <p class="mb-2"><strong>Name:</strong> {{ booking.salesman.get_full_name }}</p>
+                            <p class="mb-2"><strong>Email:</strong> {{ booking.salesman.email }}</p>
+                            {% if booking.location %}
+                            <p class="mb-2">
+                                <strong>State / City:</strong> 
+                                {{ booking.location }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Booking Information</h6>
+                            <p class="mb-2"><strong>Created By:</strong> {{ booking.created_by.get_full_name }}</p>
+                            <p class="mb-2"><strong>Created At:</strong> {{ booking.created_at|date:"M d, Y g:i A" }}</p>
+                            <p class="mb-2"><strong>Commission:</strong> ${{ booking.commission_amount }}</p>
+
+                            {% if booking.approved_by %}
+                            <p class="mb-2">
+                                <strong>Approved By:</strong> {{ booking.approved_by.get_full_name }}<br>
+                                <small class="text-muted">{{ booking.approved_at|date:"M d, Y g:i A" }}</small>
+                            </p>
+                            {% endif %}
+
+                            {% if booking.declined_by %}
+                            <p class="mb-2">
+                                <strong>Declined By:</strong> {{ booking.declined_by.get_full_name }}<br>
+                                <small class="text-muted">{{ booking.declined_at|date:"M d, Y g:i A" }}</small>
+                            </p>
+                            {% if booking.decline_reason %}
+                            <p class="mb-2">
+                                <strong>Decline Reason:</strong> {{ booking.get_decline_reason_display }}
+                            </p>
+                            {% endif %}
+                            {% endif %}
+
+                            {% if booking.is_locked %}
+                            <p class="mb-2">
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-lock-fill"></i> Locked (Payroll Finalized)
+                                </span>
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if request.user.is_staff %}
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2"><i class="bi bi-mic"></i> Audio Recording (Admin Only)</h6>
+                        {% if booking.audio_file %}
+                        <audio controls preload="none" style="width: 100%" class="mb-2">
+                            <source src="{{ booking.audio_file.url }}">
+                            Your browser does not support the audio element.
+                        </audio>
+                        <div class="d-flex gap-2 align-items-center mb-2">
+                            <p class="text-muted small mb-0">Current audio file uploaded.</p>
+                            <form method="post" action="{% url 'booking_audio_delete' booking.id %}" style="display: inline;" onsubmit="return confirm('Delete this audio file?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <p class="text-muted small mb-2">No audio file uploaded yet.</p>
+                        {% endif %}
+                        
+                        <form method="post" enctype="multipart/form-data" action="{% url 'booking_audio_upload' booking.id %}" class="mt-2">
+                            {% csrf_token %}
+                            <div class="input-group">
+                                <input type="file" name="audio_file" class="form-control" accept="audio/*" required>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-upload"></i> Upload Audio
+                                </button>
+                            </div>
+                            <small class="form-text text-muted">Upload or replace audio recording for this booking.</small>
+                        </form>
+                    </div>
+                    {% elif booking.audio_file %}
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2"><i class="bi bi-mic"></i> Audio</h6>
+                        <audio controls preload="none" style="width: 100%">
+                            <source src="{{ booking.audio_file.url }}">
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
+                    {% endif %}
+
+                    {% if booking.notes %}
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2">Notes</h6>
+                        <p class="bg-light p-3 rounded">{{ booking.notes }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if booking.status == 'canceled' %}
+                    <div class="alert alert-danger">
+                        <h6><i class="bi bi-x-circle"></i> Cancellation Information</h6>
+                        <p class="mb-1"><strong>Reason:</strong> {{ booking.get_cancellation_reason_display }}</p>
+                        <p class="mb-1"><strong>Canceled By:</strong> {{ booking.canceled_by.get_full_name }}</p>
+                        <p class="mb-1"><strong>Canceled At:</strong> {{ booking.canceled_at|date:"M d, Y g:i A" }}</p>
+                        {% if booking.cancellation_notes %}
+                        <p class="mb-0"><strong>Notes:</strong> {{ booking.cancellation_notes }}</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- ACTION BUTTONS - SIMPLIFIED AND CONSOLIDATED -->
+                    <div class="d-flex gap-2 justify-content-end flex-wrap">
+                        <a href="{% url 'calendar' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Calendar
+                        </a>
+
+                        <!-- ADMIN STATUS MANAGEMENT BUTTONS (ONLY) -->
+                        {% if request.user.is_staff %}
+                            <!-- Approve pending booking -->
+                            {% if booking.status == 'pending' %}
+                            <a href="{% url 'booking_approve' booking.id %}" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Approve
+                            </a>
+                            <a href="{% url 'booking_decline' booking.id %}" class="btn btn-danger">
+                                <i class="bi bi-x-circle"></i> Decline
+                            </a>
+                            {% endif %}
+
+                            <!-- Revert confirmed booking back to pending (not locked, not past) -->
+                            {% if booking.status == 'confirmed' and not booking.is_locked and booking.appointment_date > today %}
+                            <a href="{% url 'booking_revert_to_pending' booking.id %}" class="btn btn-warning">
+                                <i class="bi bi-arrow-counterclockwise"></i> Revert to Pending
+                            </a>
+                            {% endif %}
+
+                            <!-- Edit booking (if editable) -->
+                            {% if booking.is_editable %}
+                            <a href="{% url 'booking_edit' booking.id %}" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            {% endif %}
+                        {% endif %}
+
+                        <!-- MARK ATTENDANCE (Admin and Assigned Salesman Only) -->
+                        {% if request.user.is_staff or booking.salesman == request.user %}
+                            {% if booking.status == 'confirmed' and booking.appointment_date <= today %}
+                            <a href="{% url 'booking_mark_attended' booking.id %}" 
+                               class="btn btn-success" 
+                               onclick="return confirm('Mark this appointment as ATTENDED? This will start a 21-day follow-up campaign.')">
+                                <i class="bi bi-check-circle"></i> Mark AD
+                            </a>
+                            <a href="{% url 'booking_mark_dna' booking.id %}" 
+                               class="btn btn-danger" 
+                               onclick="return confirm('Mark this appointment as DID NOT ATTEND (DNA)? This will start a 90-day re-engagement campaign.')">
+                                <i class="bi bi-x-circle"></i> Mark DNA
+                            </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% block title %}Past Appointments - CSASS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4 align-items-center">
+    <div class="col">
+      <h2><i class="bi bi-clock-history"></i> Past Appointments</h2>
+      <p class="text-muted mb-0">View past confirmed meetings and mark attendance (AD/DNA)</p>
+    </div>
+  </div>
+
+  <form method="get" class="card mb-4 p-3 shadow-sm border-0">
+    <div class="row g-3 align-items-end">
+      {% if is_admin %}
+      <div class="col-md-4">
+        <label class="form-label fw-semibold">Salesman</label>
+        <select name="salesman" class="form-select" onchange="this.form.submit()">
+          <option value="">All Salesmen</option>
+          {% for s in salesmen %}
+          <option value="{{ s.id }}" {% if selected_salesman == s.id|stringformat:'s' %}selected{% endif %}>{{ s.get_full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+      <div class="{% if is_admin %}col-md-4{% else %}col-md-6{% endif %}">
+        <label class="form-label fw-semibold">Status</label>
+        <select name="status" class="form-select" onchange="this.form.submit()">
+          <option value="">All</option>
+          <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed (Needs Marking)</option>
+          <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Attended (AD)</option>
+          <option value="no_show" {% if status_filter == 'no_show' %}selected{% endif %}>Did Not Attend (DNA)</option>
+        </select>
+      </div>
+    </div>
+  </form>
+
+  <div class="card shadow border-0">
+    <div class="card-header bg-dark text-white">
+      <h5 class="mb-0">
+        Past Appointments
+        {% if is_salesman %}
+        <small class="ms-2">(Your Appointments Only)</small>
+        {% endif %}
+      </h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Date</th>
+              <th>Time</th>
+              {% if is_admin %}
+              <th>Salesman</th>
+              {% endif %}
+              <th>Client</th>
+              <th>Business</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for booking in page_obj %}
+            <tr>
+              <td>
+                <span class="badge bg-secondary">{{ booking.appointment_date|date:"D, M d" }}</span>
+              </td>
+              <td>{{ booking.appointment_time|time:"g:i A" }}</td>
+              {% if is_admin %}
+              <td><strong>{{ booking.salesman.get_full_name }}</strong></td>
+              {% endif %}
+              <td>{{ booking.client.get_full_name }}</td>
+              <td>{{ booking.client.business_name }}</td>
+              <td>
+                <span class="badge bg-{% if booking.appointment_type == 'zoom' %}info{% else %}primary{% endif %}">
+                  {% if booking.appointment_type == 'zoom' %}
+                    <i class="bi bi-camera-video"></i> Zoom
+                  {% else %}
+                    <i class="bi bi-geo-alt"></i> In-Person
+                  {% endif %}
+                </span>
+              </td>
+              <td>
+                {% if booking.status == 'confirmed' %}
+                  <span class="badge bg-warning text-dark">
+                    <i class="bi bi-clock-history"></i> Needs Marking
+                  </span>
+                {% elif booking.status == 'completed' %}
+                  <span class="badge bg-success">
+                    <i class="bi bi-check-circle"></i> Attended (AD)
+                  </span>
+                {% elif booking.status == 'no_show' %}
+                  <span class="badge bg-danger">
+                    <i class="bi bi-x-circle"></i> DNA
+                  </span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <div class="btn-group btn-group-sm">
+                  {% if booking.status == 'confirmed' %}
+                  <a href="{% url 'booking_mark_attended' booking.id %}" 
+                     class="btn btn-success" 
+                     title="Mark Attended - Start 21-day AD drip"
+                     onclick="return confirm('Mark this appointment as ATTENDED? This will start a 21-day follow-up campaign.')">
+                    <i class="bi bi-check-circle"></i> AD
+                  </a>
+                  <a href="{% url 'booking_mark_dna' booking.id %}" 
+                     class="btn btn-danger" 
+                     title="Mark Did Not Attend - Start 90-day DNA drip"
+                     onclick="return confirm('Mark this appointment as DID NOT ATTEND (DNA)? This will start a 90-day re-engagement campaign.')">
+                    <i class="bi bi-x-circle"></i> DNA
+                  </a>
+                  {% else %}
+                  <a href="{% url 'booking_detail' booking.id %}" class="btn btn-outline-primary">
+                    <i class="bi bi-eye"></i> View
+                  </a>
+                  {% if booking.status == 'completed' or booking.status == 'no_show' %}
+                  <a href="{% url 'drip_campaigns' %}?booking={{ booking.id }}" class="btn btn-outline-info" title="View Drip Campaign">
+                    <i class="bi bi-send"></i> Campaign
+                  </a>
+                  {% endif %}
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="{% if is_admin %}8{% else %}7{% endif %}" class="text-center text-muted py-5">
+                <i class="bi bi-inbox" style="font-size: 2rem; opacity: 0.5;"></i>
+                <p class="mt-3 fw-semibold">No past appointments found.</p>
+                {% if status_filter == 'confirmed' %}
+                <small class="text-muted">All past appointments have been marked (AD/DNA)</small>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="card-footer bg-light">
+      <nav aria-label="Pagination">
+        <ul class="pagination justify-content-center mb-0">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1{% if selected_salesman %}&salesman={{ selected_salesman }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">First</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_salesman %}&salesman={{ selected_salesman }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
+          </li>
+          {% endif %}
+          
+          <li class="page-item active">
+            <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          </li>
+          
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_salesman %}&salesman={{ selected_salesman }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if selected_salesman %}&salesman={{ selected_salesman }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Last</a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Info Card -->
+  <div class="card shadow-sm mt-3">
+    <div class="card-header bg-info text-white">
+      <h6 class="mb-0"><i class="bi bi-info-circle"></i> About Attendance Marking</h6>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <h6><span class="badge bg-success"><i class="bi bi-check-circle"></i> AD (Attended)</span></h6>
+          <p class="small mb-0">Client attended the meeting. Starts a 21-day follow-up drip campaign with messages on days 1, 7, 14, and 21.</p>
+        </div>
+        <div class="col-md-6">
+          <h6><span class="badge bg-danger"><i class="bi bi-x-circle"></i> DNA (Did Not Attend)</span></h6>
+          <p class="small mb-0">Client did not show up. Starts a 90-day re-engagement drip campaign with messages on days 1, 7, 30, 60, and 90.</p>
+        </div>
+      </div>
+      <hr>
+      <p class="small text-muted mb-0">
+        <i class="bi bi-lightbulb"></i> <strong>Tip:</strong> Mark attendance as soon as possible after the appointment for accurate tracking and timely follow-ups.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

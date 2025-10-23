@@ -1,2 +1,7 @@
 .env
 venv/
+csass_project/settings.py
+db.sqlite3
+core/migrations/
+__pycache__/
+*.pyc

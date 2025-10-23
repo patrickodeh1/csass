@@ -164,8 +164,8 @@
                             <i class="bi bi-arrow-left"></i> Back to Calendar
                         </a>
 
-                        <!-- ADMIN STATUS MANAGEMENT BUTTONS (ONLY) -->
-                        {% if request.user.is_staff %}
+                        <!-- STATUS MANAGEMENT BUTTONS (Admin & Assigned Salesman) -->
+                        {% if request.user.is_staff or booking.salesman == request.user %}
                             <!-- Approve pending booking -->
                             {% if booking.status == 'pending' %}
                             <a href="{% url 'booking_approve' booking.id %}" class="btn btn-success">
@@ -183,8 +183,8 @@
                             </a>
                             {% endif %}
 
-                            <!-- Edit booking (if editable) -->
-                            {% if booking.is_editable %}
+                            <!-- Edit booking (if editable) - Admin only -->
+                            {% if booking.is_editable and request.user.is_staff %}
                             <a href="{% url 'booking_edit' booking.id %}" class="btn btn-primary">
                                 <i class="bi bi-pencil"></i> Edit
                             </a>

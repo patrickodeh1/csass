@@ -251,7 +251,6 @@ def calendar_view(request):
                         'available_slots': [],
                         'pending_bookings': [],
                         'confirmed_bookings': [],
-                        'declined_bookings': [],
                         'appointments': [],  # For salesmen
                     })
                 else:
@@ -263,7 +262,6 @@ def calendar_view(request):
                         'available_slots': [],
                         'pending_bookings': [],
                         'confirmed_bookings': [],
-                        'declined_bookings': [],
                         'appointments': [],  # For salesmen
                     })
             calendar_weeks.append(week_data)
@@ -294,7 +292,6 @@ def calendar_view(request):
                 'available_slots': [],
                 'pending_bookings': [],
                 'confirmed_bookings': [],
-                'declined_bookings': [],
                 'appointments': [],  # For salesmen
             })
     else:  # day
@@ -386,7 +383,6 @@ def calendar_view(request):
     # Organize bookings by status for admins/remote agents, or as appointments for salesmen
     pending_bookings_dict = {}
     confirmed_bookings_dict = {}
-    declined_bookings_dict = {}
     appointments_dict = {}  # For salesmen
     
     for booking in bookings:
@@ -406,10 +402,24 @@ def calendar_view(request):
                 if date_key not in confirmed_bookings_dict:
                     confirmed_bookings_dict[date_key] = []
                 confirmed_bookings_dict[date_key].append(booking)
-            elif booking.status == 'declined':
-                if date_key not in declined_bookings_dict:
-                    declined_bookings_dict[date_key] = []
-                declined_bookings_dict[date_key].append(booking)
+    
+    # For remote agents: exclude available slots that are already booked
+    if is_remote_agent and not is_admin:
+        # Get all booked timeslot IDs
+        booked_slot_ids = set(
+            bookings.filter(available_slot__isnull=False)
+                    .values_list('available_slot_id', flat=True)
+        )
+        # Remove from available slots
+        timeslots = timeslots.exclude(id__in=booked_slot_ids)
+        # Rebuild available_slots_dict without booked slots
+        available_slots_dict = {}
+        for slot in timeslots:
+            date_key = slot.date
+            if date_key not in available_slots_dict:
+                available_slots_dict[date_key] = []
+            slot_obj = SlotData(slot.date, slot.start_time, slot.salesman, slot.appointment_type)
+            available_slots_dict[date_key].append(slot_obj)
     
     # Attach data to calendar structure
     if view_mode == 'month':
@@ -424,7 +434,6 @@ def calendar_view(request):
                     else:
                         day_info['pending_bookings'] = pending_bookings_dict.get(day_date, [])
                         day_info['confirmed_bookings'] = confirmed_bookings_dict.get(day_date, [])
-                        day_info['declined_bookings'] = declined_bookings_dict.get(day_date, [])
     
     elif view_mode == 'week':
         for day_info in week_days:
@@ -436,14 +445,12 @@ def calendar_view(request):
             else:
                 day_info['pending_bookings'] = pending_bookings_dict.get(day_date, [])
                 day_info['confirmed_bookings'] = confirmed_bookings_dict.get(day_date, [])
-                day_info['declined_bookings'] = declined_bookings_dict.get(day_date, [])
     
     # Day view - prepare separate lists
     day_available_slots = None
     day_inactive_slots = None
     day_pending_bookings = None
     day_confirmed_bookings = None
-    day_declined_bookings = None
     day_appointments = None
     
     if view_mode == 'day':
@@ -454,7 +461,6 @@ def calendar_view(request):
         else:
             day_pending_bookings = pending_bookings_dict.get(current_date, [])
             day_confirmed_bookings = confirmed_bookings_dict.get(current_date, [])
-            day_declined_bookings = declined_bookings_dict.get(current_date, [])
     
     
     # Get all salesmen for filter (only for admins)
@@ -483,7 +489,6 @@ def calendar_view(request):
         'day_available_slots': day_available_slots,
         'day_pending_bookings': day_pending_bookings,
         'day_confirmed_bookings': day_confirmed_bookings,
-        'day_declined_bookings': day_declined_bookings,
         'day_appointments': day_appointments,
         'day_inactive_slots': day_inactive_slots,
         'is_salesman': is_salesman and not is_admin,  # Flag for template
@@ -1441,11 +1446,13 @@ def commissions_view(request):
     end_date = start_date + timedelta(days=6)
     
     # Only show bookings created by this remote agent
+    # CRITICAL: Filter by CREATION DATE (created_at), not appointment_date
+    # Commissions are based on when bookings are CREATED, not when appointments are scheduled
     all_bookings = Booking.objects.filter(
         created_by=request.user,
-        appointment_date__gte=start_date,
-        appointment_date__lte=end_date
-    ).select_related('client', 'salesman').order_by('-appointment_date', '-appointment_time')
+        created_at__date__gte=start_date,
+        created_at__date__lte=end_date
+    ).select_related('client', 'salesman').order_by('-created_at')
     
     # Separate bookings by status - EVALUATE QUERYSETS EXPLICITLY
     confirmed_bookings = list(all_bookings.filter(status__in=['confirmed', 'completed']))
@@ -1624,9 +1631,11 @@ def payroll_view(request):
     )
     
     # Get all bookings in this period CREATED BY REMOTE AGENTS only
+    # CRITICAL: Filter by CREATION DATE (created_at), not appointment_date
+    # Bookings are assigned to payroll based on WHEN THEY ARE CREATED, not scheduled
     bookings = Booking.objects.filter(
-        appointment_date__gte=start_date,
-        appointment_date__lte=end_date,
+        created_at__date__gte=start_date,
+        created_at__date__lte=end_date,
         created_by__groups__name='remote_agent'
     ).select_related('client', 'salesman', 'created_by')
     
@@ -1698,9 +1707,10 @@ def payroll_finalize(request, pk):
         payroll_period.save()
         
         # Lock all bookings in this period
+        # CRITICAL: Filter by CREATION DATE (created_at), not appointment_date
         Booking.objects.filter(
-            appointment_date__gte=payroll_period.start_date,
-            appointment_date__lte=payroll_period.end_date
+            created_at__date__gte=payroll_period.start_date,
+            created_at__date__lte=payroll_period.end_date
         ).update(
             is_locked=True,
             payroll_period=payroll_period
@@ -1710,9 +1720,10 @@ def payroll_finalize(request, pk):
         return redirect('payroll')
     
     # Calculate summary for confirmation
+    # CRITICAL: Filter by CREATION DATE (created_at), not appointment_date
     bookings = Booking.objects.filter(
-        appointment_date__gte=payroll_period.start_date,
-        appointment_date__lte=payroll_period.end_date,
+        created_at__date__gte=payroll_period.start_date,
+        created_at__date__lte=payroll_period.end_date,
         status__in=['confirmed', 'completed']
     )
     
@@ -1769,9 +1780,10 @@ def payroll_export(request):
     ])
     
     # Get bookings created by remote agents only
+    # CRITICAL: Filter by CREATION DATE (created_at), not appointment_date
     bookings = Booking.objects.filter(
-        appointment_date__gte=start_date,
-        appointment_date__lte=end_date,
+        created_at__date__gte=start_date,
+        created_at__date__lte=end_date,
         created_by__groups__name='remote_agent'
     ).select_related('client', 'salesman', 'created_by').order_by('created_by', 'appointment_date')
     
@@ -2173,6 +2185,83 @@ def audit_log_view(request):
     }
     
     return render(request, 'audit_log.html', context)
+
+# ============================================================
+# Client Management Views (Admin Only)
+# ============================================================
+
+@login_required
+@admin_required
+def clients_view(request):
+    """List all clients with search and pagination"""
+    from django.core.paginator import Paginator
+    from django.db.models import Q, Count
+    
+    search_query = request.GET.get('search', '').strip()
+    clients = Client.objects.all().annotate(
+        total_bookings=Count('bookings'),
+        confirmed_bookings=Count('bookings', filter=Q(bookings__status='confirmed'))
+    ).order_by('-created_at')
+    
+    if search_query:
+        clients = clients.filter(
+            Q(business_name__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(phone_number__icontains=search_query)
+        )
+    
+    paginator = Paginator(clients, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'search_query': search_query,
+    }
+    
+    return render(request, 'clients.html', context)
+
+
+@login_required
+@admin_required
+def client_detail(request, pk):
+    """Display detailed client information and booking history"""
+    from django.db.models import Q, Count
+    
+    try:
+        client = Client.objects.get(pk=pk)
+    except Client.DoesNotExist:
+        messages.error(request, 'Client not found.')
+        return redirect('clients')
+    
+    # Get booking statistics
+    total_bookings = client.bookings.count()
+    confirmed_bookings = client.bookings.filter(status='confirmed').count()
+    pending_bookings = client.bookings.filter(status='pending').count()
+    canceled_bookings = client.bookings.filter(status='canceled').count()
+    
+    # Get all bookings
+    bookings = client.bookings.all().order_by('-appointment_date', '-appointment_time')
+    
+    # Get active drip campaigns
+    campaigns = DripCampaign.objects.filter(
+        booking__client=client,
+        is_active=True
+    ).select_related('booking')
+    
+    context = {
+        'client': client,
+        'total_bookings': total_bookings,
+        'confirmed_bookings': confirmed_bookings,
+        'pending_bookings': pending_bookings,
+        'canceled_bookings': canceled_bookings,
+        'bookings': bookings,
+        'campaigns': campaigns,
+    }
+    
+    return render(request, 'client_detail.html', context)
 
 # ============================================================
 @login_required
@@ -3247,71 +3336,7 @@ def user_delete(request, pk):
         'audit_logs': audit_logs,
         'active_bookings': active_bookings,
         'has_active_bookings': active_bookings > 0,
-        'replacement_salesmen': replacement_salesmen,
+        'replacement_salesmen': replacement_salesmen
     }
     
     return render(request, 'user_delete.html', context)
-
-@login_required
-@admin_required
-def clients_view(request):
-    """View all clients with their details"""
-    search_query = request.GET.get('search', '').strip()
-    
-    clients = Client.objects.all().annotate(
-        total_bookings=Count('bookings'),
-        confirmed_bookings=Count('bookings', filter=Q(bookings__status__in=['confirmed', 'completed']))
-    ).order_by('-created_at')
-    
-    # Search functionality
-    if search_query:
-        clients = clients.filter(
-            Q(business_name__icontains=search_query) |
-            Q(first_name__icontains=search_query) |
-            Q(last_name__icontains=search_query) |
-            Q(email__icontains=search_query) |
-            Q(phone_number__icontains=search_query)
-        )
-    
-    # Pagination
-    paginator = Paginator(clients, 50)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
-    context = {
-        'page_obj': page_obj,
-        'search_query': search_query,
-    }
-    
-    return render(request, 'clients.html', context)
-
-
-@login_required
-@admin_required
-def client_detail(request, pk):
-    """View detailed client information and booking history"""
-    client = get_object_or_404(Client, pk=pk)
-    
-    # Get all bookings for this client
-    bookings = client.bookings.all().select_related('salesman', 'created_by').order_by('-appointment_date', '-appointment_time')
-    
-    # Get booking statistics
-    total_bookings = bookings.count()
-    confirmed_bookings = bookings.filter(status__in=['confirmed', 'completed']).count()
-    pending_bookings = bookings.filter(status='pending').count()
-    canceled_bookings = bookings.filter(status='canceled').count()
-    
-    # Get drip campaigns
-    campaigns = DripCampaign.objects.filter(booking__client=client).select_related('booking').order_by('-started_at')
-    
-    context = {
-        'client': client,
-        'bookings': bookings,
-        'total_bookings': total_bookings,
-        'confirmed_bookings': confirmed_bookings,
-        'pending_bookings': pending_bookings,
-        'canceled_bookings': canceled_bookings,
-        'campaigns': campaigns,
-    }
-    
-    return render(request, 'client_detail.html', context)

@@ -5,24 +5,71 @@ from django.conf import settings
 from django.utils import timezone
 from datetime import datetime, timedelta, time
 import os
+import pytz
 from .models import (SystemConfig, Booking, PayrollPeriod, AvailableTimeSlot, AvailabilityCycle, User, MessageTemplate, DripCampaign, 
                      ScheduledMessage, CommunicationLog)
 
 
 def get_current_payroll_period():
-    """Get current payroll period (Friday to Thursday)"""
-    today = datetime.now().date()
+    """
+    Get current payroll period (Friday to Thursday 3 PM EST).
+    
+    CRITICAL: Payroll logic based on BOOKING CREATION TIME, not appointment date:
+    - Payroll week: Friday 12:00 AM to Thursday 3:00 PM EST
+    - After Thursday 3 PM: Booking goes to NEXT week's payroll
+    
+    Formula for finding current period:
+    - Calculate days back to last Friday
+    - Find corresponding Thursday (6 days forward)
+    - If Thursday after 3 PM: shift to next week (Friday to Thursday)
+    """
+    # Get current time in EST
+    est = pytz.timezone('US/Eastern')
+    now_est = timezone.now().astimezone(est)
+    today = now_est.date()
+    
     # Calculate days since last Friday (weekday 4)
-    days_since_friday = (today.weekday() - 4) % 7
-    period_start = today - timedelta(days=days_since_friday)
-    period_end = period_start + timedelta(days=6)
+    # Monday(0): 3 days back, Tuesday(1): 4 days back, ..., Friday(4): 0 days, Saturday(5): 1 day back, Sunday(6): 2 days back
+    if today.weekday() == 4:  # Friday
+        days_back = 0
+    elif today.weekday() > 4:  # Saturday(5), Sunday(6)
+        days_back = today.weekday() - 4
+    else:  # Monday(0) to Thursday(3)
+        days_back = today.weekday() + 3
+    
+    period_start = today - timedelta(days=days_back)  # This Friday
+    period_end = period_start + timedelta(days=6)  # This Thursday
+    
+    # CRITICAL: If Thursday after 3 PM EST, shift to NEXT week's payroll
+    if today.weekday() == 3 and now_est.time() >= time(15, 0):  # Thursday after 3 PM
+        period_start = period_start + timedelta(days=7)
+        period_end = period_end + timedelta(days=7)
     
     return {
         'start': datetime.combine(period_start, time.min),
-        'end': datetime.combine(period_end, time.max),
+        'end': datetime.combine(period_end, time(15, 0)),  # Thursday 3 PM
         'start_date': period_start,
         'end_date': period_end
     }
+
+def is_within_payroll_cutoff():
+    """
+    Check if current time is within payroll cutoff.
+    Returns True if booking should go to current payroll, False if next payroll.
+    """
+    est = pytz.timezone('US/Eastern')
+    now_est = timezone.now().astimezone(est)
+    
+    # If it's Thursday after 3 PM EST, bookings go to next week
+    if now_est.weekday() == 3 and now_est.time() >= time(15, 0):
+        return False
+    
+    # If it's Friday or Saturday, bookings go to next week
+    if now_est.weekday() in [4, 5]:
+        return False
+    
+    return True
+
 
 def get_payroll_periods(weeks=3):
     """Get list of recent payroll periods"""
@@ -46,6 +93,34 @@ def get_payroll_periods(weeks=3):
     
     return periods
 
+def delete_subsequent_timeslots(booking):
+    """
+    CRITICAL NEW FUNCTION: Delete 3 subsequent timeslots after a booking (1.5 hours buffer).
+    Deletes BOTH zoom and in_person slots for the 1.5 hour window.
+    
+    Example: Booking at 9:00 AM → Delete 9:30, 10:00, 10:30 (both types)
+    
+    Args:
+        booking: Booking instance
+    """
+    from datetime import datetime, timedelta
+    
+    # Calculate the 3 subsequent time slots (30-minute intervals)
+    base_time = datetime.combine(booking.appointment_date, booking.appointment_time)
+    
+    slots_to_delete = []
+    for i in range(1, 4):  # Next 3 slots (9:30, 10:00, 10:30)
+        slot_time = (base_time + timedelta(minutes=30 * i)).time()
+        slots_to_delete.append(slot_time)
+    
+    # Delete BOTH zoom and in_person slots for this salesman on this date
+    deleted_count = AvailableTimeSlot.objects.filter(
+        salesman=booking.salesman,
+        date=booking.appointment_date,
+        start_time__in=slots_to_delete
+    ).delete()[0]
+    
+    return deleted_count
 
 def generate_timeslots_for_cycle(salesman=None):
     """

@@ -161,7 +161,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Client(models.Model):
     business_name = models.CharField(max_length=200, help_text="business name")
     first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100, blank=True, null=True)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=20)
     notes = models.TextField(blank=True)
@@ -177,10 +177,10 @@ class Client(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.first_name} {self.last_name}".strip() if self.last_name else self.first_name
     
     def get_full_name(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.first_name} {self.last_name}".strip() if self.last_name else self.first_name
     
     def get_booking_count(self):
         return self.bookings.exclude(status='canceled').count()
@@ -252,9 +252,11 @@ class Booking(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=['appointment_date']),
+            models.Index(fields=['created_at']),  # CRITICAL: Added for payroll filtering by creation date
             models.Index(fields=['salesman']),
             models.Index(fields=['status']),
             models.Index(fields=['salesman', 'appointment_date', 'status']),
+            models.Index(fields=['created_by', 'created_at']),  # CRITICAL: Added for remote agent commission queries
             models.Index(fields=['payroll_period']),
         ]
         ordering = ['appointment_date', 'appointment_time']

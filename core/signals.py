@@ -3,12 +3,14 @@ from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.dispatch import receiver
 from django.db import transaction
 from .models import User, Booking, PayrollPeriod, AvailableTimeSlot, AuditLog, Client, PayrollAdjustment, AvailabilityCycle
-from .utils import generate_timeslots_for_cycle
+from .utils import generate_timeslots_for_cycle, get_current_payroll_period, delete_subsequent_timeslots
 from .tasks import generate_timeslots_async
 from django.utils import timezone
 import logging
 import threading
 import json
+
+logger = logging.getLogger(__name__)
 
 def get_client_ip(request):
     """Get client IP from request"""
@@ -32,6 +34,141 @@ def create_audit_log(user, action, entity_type, entity_id, changes, request=None
         changes=changes,
         ip_address=ip_address,
         user_agent=user_agent
+    )
+
+@receiver(post_save, sender=Booking)
+def handle_booking_save(sender, instance, created, **kwargs):
+    """
+    CRITICAL: Handle booking saves with FOUR key actions:
+    1. Mark the booked slot as inactive
+    2. Assign to correct payroll period (based on BOOKING CREATION TIME, not appointment date)
+    3. Delete 3 subsequent timeslots (1.5 hour buffer)
+    4. Log changes to audit trail
+    """
+    
+    # ==================== MARK BOOKED SLOT AS INACTIVE ====================
+    # CRITICAL: When a slot is booked (e.g., zoom at 9:00 AM):
+    # 1. Mark the booked slot as inactive/booked
+    # 2. Also mark the OPPOSITE appointment type (in_person at 9:00 AM) as inactive
+    #    so a different salesman can't double-book the same time slot
+    if created and instance.available_slot:
+        try:
+            # Mark the booked slot
+            instance.available_slot.is_active = False
+            instance.available_slot.is_booked = True
+            instance.available_slot.save(update_fields=['is_active', 'is_booked'])
+            logger.info(
+                f"Marked slot inactive: {instance.available_slot.salesman.get_full_name()} "
+                f"on {instance.available_slot.date} at {instance.available_slot.start_time} "
+                f"({instance.available_slot.appointment_type})"
+            )
+            
+            # Mark the opposite appointment type as inactive
+            opposite_type = 'in_person' if instance.available_slot.appointment_type == 'zoom' else 'zoom'
+            opposite_slot = AvailableTimeSlot.objects.filter(
+                salesman=instance.available_slot.salesman,
+                date=instance.available_slot.date,
+                start_time=instance.available_slot.start_time,
+                appointment_type=opposite_type
+            ).first()
+            
+            if opposite_slot:
+                opposite_slot.is_active = False
+                opposite_slot.save(update_fields=['is_active'])
+                logger.info(
+                    f"Marked opposite slot inactive: {opposite_slot.salesman.get_full_name()} "
+                    f"on {opposite_slot.date} at {opposite_slot.start_time} "
+                    f"({opposite_slot.appointment_type})"
+                )
+        except Exception as e:
+            logger.error(f"Error marking slot as inactive for booking {instance.id}: {str(e)}")
+    
+    # ==================== PAYROLL ASSIGNMENT ====================
+    # CRITICAL CHANGE: Bookings are assigned to payroll based on WHEN THEY ARE CREATED,
+    # NOT when the appointment is scheduled.
+    #
+    # Example: If appointment is on Nov 30th but booking is created today (Oct 23),
+    # it goes into THIS WEEK's payroll (Oct 18-24), not the week of Nov 30th.
+    #
+    # Payroll cutoff: Thursday 3 PM EST
+    # - Bookings created BEFORE Thursday 3 PM EST go to current week's payroll
+    # - Bookings created AFTER Thursday 3 PM EST go to NEXT week's payroll
+    
+    if created:
+        # Get current payroll period (respects Thursday 3 PM EST cutoff)
+        current_period = get_current_payroll_period()
+        
+        logger.info(
+            f"Payroll calculation for booking {instance.id}: "
+            f"Period start={current_period['start_date']}, end={current_period['end_date']}, "
+            f"Booking created at={instance.created_at}"
+        )
+        
+        # Get or create the payroll period for this booking
+        payroll_period, created_period = PayrollPeriod.objects.get_or_create(
+            start_date=current_period['start_date'],
+            end_date=current_period['end_date']
+        )
+        
+        logger.info(
+            f"PayrollPeriod: id={payroll_period.id}, created={created_period}, "
+            f"start={payroll_period.start_date}, end={payroll_period.end_date}"
+        )
+        
+        # Assign booking to this payroll period
+        if not instance.payroll_period:
+            instance.payroll_period = payroll_period
+            instance.save(update_fields=['payroll_period'])
+            
+            logger.info(
+                f"✅ Booking {instance.id} assigned to payroll period "
+                f"{payroll_period.start_date} - {payroll_period.end_date} "
+                f"(Created at: {instance.created_at})"
+            )
+        else:
+            logger.warning(
+                f"⚠️ Booking {instance.id} already has payroll_period: {instance.payroll_period}"
+            )
+    
+    # ==================== DELETE SUBSEQUENT TIMESLOTS ====================
+    # CRITICAL CHANGE: When a booking is created, delete the next 3 timeslots
+    # (1.5 hours) to provide buffer time for the salesman.
+    # Deletes BOTH zoom and in_person types.
+    #
+    # Example: Booking at 9:00 AM → Delete 9:30, 10:00, 10:30 (both types)
+    
+    if created and instance.status in ['pending', 'confirmed', 'completed']:
+        try:
+            deleted_count = delete_subsequent_timeslots(instance)
+            if deleted_count > 0:
+                logger.info(
+                    f"Deleted {deleted_count} subsequent timeslots for booking {instance.id} "
+                    f"({instance.salesman.get_full_name()} on {instance.appointment_date} at {instance.appointment_time})"
+                )
+        except Exception as e:
+            logger.error(f"Error deleting subsequent timeslots for booking {instance.id}: {str(e)}")
+    
+    # ==================== AUDIT LOG ====================
+    action = 'create' if created else 'update'
+    changes = {
+        'client': str(instance.client),
+        'salesman': instance.salesman.get_full_name(),
+        'date': str(instance.appointment_date),
+        'time': str(instance.appointment_time),
+        'type': instance.appointment_type,
+        'status': instance.status,
+    }
+    
+    if created:
+        changes['payroll_period'] = str(instance.payroll_period) if instance.payroll_period else 'None'
+        changes['commission_amount'] = str(instance.commission_amount)
+    
+    create_audit_log(
+        user=instance.created_by if created else instance.updated_by,
+        action=action,
+        entity_type='Booking',
+        entity_id=instance.id,
+        changes=changes
     )
 
 @receiver(post_save, sender=Booking)

@@ -223,8 +223,8 @@ class Booking(models.Model):
     notes = models.TextField(blank=True)
     commission_amount = models.DecimalField(max_digits=10, decimal_places=2)
     audio_file = models.FileField(
-        upload_to='booking_media/audio/',
-        storage=MediaCloudinaryStorage(),
+        upload_to='booking_audio/',
+        storage=MediaCloudinaryStorage(resource_type='video'),
         null=True,
         blank=True
     )

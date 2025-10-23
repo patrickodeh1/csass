@@ -6,6 +6,7 @@ from django.utils import timezone
 from decimal import Decimal
 from datetime import datetime, timedelta, time
 import uuid
+from cloudinary_storage.storage import MediaCloudinaryStorage
 
 
 class UserManager(BaseUserManager):
@@ -222,9 +223,10 @@ class Booking(models.Model):
     notes = models.TextField(blank=True)
     commission_amount = models.DecimalField(max_digits=10, decimal_places=2)
     audio_file = models.FileField(
-        upload_to='booking_audio/',
+        upload_to='booking_media/audio/',
+        storage=MediaCloudinaryStorage(),
         null=True,
-        blank=True,
+        blank=True
     )
     cancellation_reason = models.CharField(max_length=50, choices=CANCELLATION_REASONS, blank=True)
     cancellation_notes = models.TextField(blank=True)

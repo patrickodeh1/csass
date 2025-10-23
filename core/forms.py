@@ -328,7 +328,7 @@ class CustomPasswordResetForm(PasswordResetForm):
 class BookingForm(forms.ModelForm):
     business_name = forms.CharField(max_length=200, required=True)
     client_first_name = forms.CharField(max_length=100, required=True)
-    client_last_name = forms.CharField(max_length=100, required=True)
+    client_last_name = forms.CharField(max_length=100, required=False)
     client_email = forms.EmailField(required=True)
     client_phone = forms.CharField(max_length=20, required=True)
     zoom_link = forms.URLField(required=False, widget=forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Zoom meeting link (if applicable)'}))

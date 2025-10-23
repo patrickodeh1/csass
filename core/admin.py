@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (User, Client, Booking, 
-                     PayrollPeriod, PayrollAdjustment, 
+                     PayrollPeriod, PayrollAdjustment, AvailabilityCycle,
                      SystemConfig, AuditLog, AvailableTimeSlot)
 
 @admin.register(User)
@@ -26,6 +26,7 @@ class BookingAdmin(admin.ModelAdmin):
     date_hierarchy = 'appointment_date'
 
 admin.site.register(AvailableTimeSlot)
+admin.site.register(AvailabilityCycle)
 
 admin.site.register(PayrollPeriod)
 

@@ -771,3 +771,157 @@ App 2053261 output: tput: No value for $TERM and no -T specified
 App 2078416 output: tput: No value for $TERM and no -T specified
 App 2052520 output: [ pid=2052520, time=2025-10-20 17:13:10,931 ]: Not Found: /media/booking_audio/SPOTIFY-DOWNLOADER_UUmkbtv.COM_Bolek_I_Lolek.mp3
 App 2052520 output: [ pid=2052520, time=2025-10-20 17:13:45,872 ]: Not Found: /media/booking_audio/SPOTIFY-DOWNLOADER_UUmkbtv.COM_Bolek_I_Lolek.mp3
+App 2052520 output: [ pid=2052520, time=2025-10-20 17:21:08,766 ]: Not Found: /media/booking_audio/SPOTIFY-DOWNLOADER.COM_Butterflies_feat._Julia_Messenger.mp3
+App 2097689 output: tput: No value for $TERM and no -T specified
+App 2052520 output: [ pid=2052520, time=2025-10-20 17:28:54,387 ]: Not Found: /apple-touch-icon-precomposed.png
+App 2052520 output: [ pid=2052520, time=2025-10-20 17:28:54,498 ]: Not Found: /apple-touch-icon.png
+App 2052520 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 2052520 output: Existing user 5: original=True, current=True, should_generate=False
+App 2052520 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 2052520 output: Existing user 5: original=True, current=True, should_generate=False
+App 2127418 output: tput: No value for $TERM and no -T specified
+App 2187862 output: tput: No value for $TERM and no -T specified
+App 2052520 output: [ pid=2052520, time=2025-10-20 17:59:47,953 ]: Decline notification failed for booking 9: No module named 'sendgrid_backend'
+App 2202988 output: tput: No value for $TERM and no -T specified
+App 2306159 output: tput: No value for $TERM and no -T specified
+App 2555509 output: tput: No value for $TERM and no -T specified
+App 2677213 output: tput: No value for $TERM and no -T specified
+App 2929534 output: tput: No value for $TERM and no -T specified
+App 2929534 output: [ pid=2929534, time=2025-10-20 22:19:53,593 ]: Not Found: /ad,im
+App 2929534 output: [ pid=2929534, time=2025-10-20 22:19:56,939 ]: Not Found: /ad,im
+App 2953382 output: tput: No value for $TERM and no -T specified
+App 2953987 output: tput: No value for $TERM and no -T specified
+App 2955723 output: tput: No value for $TERM and no -T specified
+App 2959141 output: tput: 
+App 2959141 output: No value for $TERM and no -T specified
+App 2979675 output: tput: No value for $TERM and no -T specified
+App 2979950 output: tput: No value for $TERM and no -T specified
+App 2980202 output: tput: No value for $TERM and no -T specified
+App 2984978 output: tput: No value for $TERM and no -T specified
+App 2995166 output: tput: No value for $TERM and no -T specified
+App 2995417 output: tput: No value for $TERM and no -T specified
+App 2995682 output: tput: No value for $TERM and no -T specified
+App 2997265 output: tput: No value for $TERM and no -T specified
+App 3003667 output: tput: No value for $TERM and no -T specified
+App 3003789 output: tput: 
+App 3003789 output: No value for $TERM and no -T specified
+App 3004179 output: tput: No value for $TERM and no -T specified
+App 3006025 output: tput: No value for $TERM and no -T specified
+App 3011101 output: tput: No value for $TERM and no -T specified
+App 3016398 output: tput: No value for $TERM and no -T specified
+App 3032204 output: tput: No value for $TERM and no -T specified
+App 3003667 output: [ pid=3003667, time=2025-10-20 23:07:22,600 ]: Decline notification failed for booking 7: No module named 'sendgrid_backend'
+App 3124233 output: tput: No value for $TERM and no -T specified
+App 3221263 output: tput: 
+App 3221263 output: No value for $TERM and no -T specified
+App 3338370 output: tput: No value for $TERM and no -T specified
+App 3440694 output: tput: No value for $TERM and no -T specified
+App 3512451 output: tput: No value for $TERM and no -T specified
+App 3644436 output: tput: No value for $TERM and no -T specified
+App 3884566 output: tput: No value for $TERM and no -T specified
+App 3924329 output: tput: No value for $TERM and no -T specified
+App 4119425 output: tput: No value for $TERM and no -T specified
+App 34214 output: tput: No value for $TERM and no -T specified
+App 34214 output: [ pid=34214, time=2025-10-21 10:34:05,404 ]: Not Found: /apple-touch-icon-120x120-precomposed.png
+App 34214 output: [ pid=34214, time=2025-10-21 10:34:05,564 ]: Not Found: /apple-touch-icon-120x120.png
+App 34214 output: [ pid=34214, time=2025-10-21 10:34:05,810 ]: Not Found: /apple-touch-icon-precomposed.png
+App 34214 output: [ pid=34214, time=2025-10-21 10:34:06,064 ]: Not Found: /apple-touch-icon.png
+App 144381 output: tput: No value for $TERM and no -T specified
+App 157015 output: tput: No value for $TERM and no -T specified
+App 157015 output: [ pid=157015, time=2025-10-21 11:39:31,422 ]: Decline notification failed for booking 8: No module named 'sendgrid_backend'
+App 157015 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 157015 output: Existing user 5: original=True, current=True, should_generate=False
+App 157015 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 157015 output: Existing user 5: original=True, current=True, should_generate=False
+App 292787 output: tput: No value for $TERM and no -T specified
+App 157015 output: [ pid=157015, time=2025-10-21 12:32:39,970 ]: Confirmation email failed for booking 14: No module named 'sendgrid_backend'
+App 157015 output: [ pid=157015, time=2025-10-21 12:33:35,878 ]: Confirmation email failed for booking 13: No module named 'sendgrid_backend'
+App 393634 output: tput: No value for $TERM and no -T specified
+App 393859 output: tput: No value for $TERM and no -T specified
+App 393634 output: [ pid=393634, time=2025-10-21 13:50:33,106 ]: Decline notification failed for booking 3: No module named 'sendgrid_backend'
+App 393634 output: [ pid=393634, time=2025-10-21 13:54:38,767 ]: Not Found: /apple-touch-icon-precomposed.png
+App 393634 output: [ pid=393634, time=2025-10-21 13:54:38,770 ]: Not Found: /apple-touch-icon.png
+App 393634 output: [ pid=393634, time=2025-10-21 13:54:38,775 ]: Not Found: /favicon.ico
+App 495129 output: tput: No value for $TERM and no -T specified
+App 507842 output: tput: No value for $TERM and no -T specified
+App 644959 output: tput: No value for $TERM and no -T specified
+App 885313 output: tput: No value for $TERM and no -T specified
+App 885465 output: tput: No value for $TERM and no -T specified
+App 1003792 output: tput: No value for $TERM and no -T specified
+App 1003792 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 1003792 output: Existing user 5: original=True, current=True, should_generate=False
+App 1003792 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 1003792 output: Existing user 5: original=True, current=True, should_generate=False
+App 1088982 output: tput: No value for $TERM and no -T specified
+App 1423763 output: tput: No value for $TERM and no -T specified
+App 1636921 output: tput: No value for $TERM and no -T specified
+App 1843774 output: tput: No value for $TERM and no -T specified
+App 1950210 output: tput: No value for $TERM and no -T specified
+App 1950210 output: [ pid=1950210, time=2025-10-22 03:29:21,409 ]: Not Found: /app/
+App 1950210 output: [ pid=1950210, time=2025-10-22 03:29:21,519 ]: Not Found: /login/
+App 2069345 output: tput: No value for $TERM and no -T specified
+App 2069345 output: [ pid=2069345, time=2025-10-22 04:29:30,978 ]: Not Found: /dist/js/bootstrap.bundle.min.js
+App 2069345 output: [ pid=2069345, time=2025-10-22 04:29:30,984 ]: Not Found: /cdn.js
+App 2117872 output: tput: No value for $TERM and no -T specified
+App 2069345 output: [ pid=2069345, time=2025-10-22 04:30:06,993 ]: Not Found: /cdn.js
+App 2117872 output: [ pid=2117872, time=2025-10-22 04:30:07,035 ]: Not Found: /dist/js/bootstrap.bundle.min.js
+App 2165680 output: tput: No value for $TERM and no -T specified
+App 2372777 output: tput: No value for $TERM and no -T specified
+App 2389312 output: tput: No value for $TERM and no -T specified
+App 2389312 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 2389312 output: Existing user 5: original=True, current=True, should_generate=False
+App 2389312 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 2389312 output: Existing user 5: original=True, current=True, should_generate=False
+App 2492932 output: tput: No value for $TERM and no -T specified
+App 2389312 output: [ pid=2389312, time=2025-10-22 08:13:03,973 ]: Not Found: /media/booking_audio/deja.mp3
+App 2586665 output: tput: No value for $TERM and no -T specified
+App 2883228 output: tput: No value for $TERM and no -T specified
+App 2914192 output: tput: No value for $TERM and no -T specified
+App 2914192 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 2914192 output: Existing user 5: original=True, current=True, should_generate=False
+App 2914192 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 2914192 output: Existing user 5: original=True, current=True, should_generate=False
+App 2914192 output: [ pid=2914192, time=2025-10-22 11:18:58,853 ]: Decline notification failed for booking 11: No module named 'sendgrid_backend'
+App 2950470 output: tput: No value for $TERM and no -T specified
+App 2914192 output: [ pid=2914192, time=2025-10-22 11:24:24,963 ]: Not Found: /media/booking_audio/20251016_1513_6789339219.mp3
+App 2914192 output: [ pid=2914192, time=2025-10-22 11:58:51,257 ]: Not Found: /media/booking_audio/20251016_1513_6789339219.mp3
+App 3148585 output: tput: No value for $TERM and no -T specified
+App 3276478 output: tput: No value for $TERM and no -T specified
+App 3148585 output: [ pid=3148585, time=2025-10-22 14:12:33,374 ]: Not Found: /media/booking_audio/20251022_1100_8287309258.mp3
+App 3148585 output: [ pid=3148585, time=2025-10-22 14:13:48,907 ]: Not Found: /media/booking_audio/20251022_1100_8287309258.mp3
+App 3148585 output: [ pid=3148585, time=2025-10-22 14:16:08,249 ]: Not Found: /media/booking_audio/20251022_1100_8287309258.mp3
+App 3307881 output: tput: No value for $TERM and no -T specified
+App 3341236 output: tput: No value for $TERM and no -T specified
+App 3357646 output: tput: No value for $TERM and no -T specified
+App 3478573 output: tput: No value for $TERM and no -T specified
+App 3519456 output: tput: No value for $TERM and no -T specified
+App 3550370 output: tput: No value for $TERM and no -T specified
+App 3586610 output: tput: No value for $TERM and no -T specified
+App 3607505 output: tput: No value for $TERM and no -T specified
+App 3679605 output: tput: No value for $TERM and no -T specified
+App 3710599 output: tput: No value for $TERM and no -T specified
+App 3718236 output: tput: No value for $TERM and no -T specified
+App 3746557 output: tput: 
+App 3746557 output: No value for $TERM and no -T specified
+App 3775270 output: tput: No value for $TERM and no -T specified
+App 3718236 output: [ pid=3718236, time=2025-10-22 17:41:53,962 ]: Not Found: /apple-touch-icon-120x120-precomposed.png
+App 3718236 output: [ pid=3718236, time=2025-10-22 17:41:54,120 ]: Not Found: /apple-touch-icon-120x120.png
+App 3718236 output: [ pid=3718236, time=2025-10-22 17:41:54,259 ]: Not Found: /apple-touch-icon-precomposed.png
+App 3718236 output: [ pid=3718236, time=2025-10-22 17:41:54,388 ]: Not Found: /apple-touch-icon.png
+App 3859180 output: tput: No value for $TERM and no -T specified
+App 3859180 output: [ pid=3859180, time=2025-10-22 18:01:45,991 ]: Not Found: /apple-touch-icon-precomposed.png
+App 3859180 output: [ pid=3859180, time=2025-10-22 18:01:45,994 ]: Not Found: /favicon.ico
+App 3859180 output: [ pid=3859180, time=2025-10-22 18:01:46,000 ]: Not Found: /apple-touch-icon.png
+App 3861291 output: tput: No value for $TERM and no -T specified
+App 3970846 output: tput: No value for $TERM and no -T specified
+App 4007826 output: tput: No value for $TERM and no -T specified
+App 4007826 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 4007826 output: Existing user 5: original=True, current=True, should_generate=False
+App 4007826 output: User 5 (Ryan Bellknapp) is an active salesman. Created: False
+App 4007826 output: Existing user 5: original=True, current=True, should_generate=False
+App 4100291 output: tput: No value for $TERM and no -T specified
+App 4109090 output: tput: No value for $TERM and no -T specified
+App 81980 output: tput: No value for $TERM and no -T specified
+App 214133 output: tput: No value for $TERM and no -T specified
+App 489635 output: tput: No value for $TERM and no -T specified
+App 590163 output: tput: No value for $TERM and no -T specified

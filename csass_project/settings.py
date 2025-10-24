@@ -5,7 +5,7 @@ from decouple import config
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-temp-key')
+SECRET_KEY = config('SECRET_KEY', default='@(ggq*4*-!r=so-c=7mguzii1#hwd$26+zb!girkmvkz4_h^)&')
 DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = [
     'csass-production.up.railway.app',
@@ -151,9 +151,9 @@ LOGIN_REDIRECT_URL = 'calendar'
 LOGOUT_REDIRECT_URL = 'login'
 
 # EMAIL SETTINGS
-EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
-SENDGRID_API_KEY = config("SENDGRID_API_KEY")
-DEFAULT_FROM_EMAIL = config("FROM_EMAIL")
+#EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
+#SENDGRID_API_KEY = config("SENDGRID_API_KEY")
+#DEFAULT_FROM_EMAIL = config("FROM_EMAIL")
 
 # PASSWORD RESET
 PASSWORD_RESET_TIMEOUT = 86400  # 24 hours

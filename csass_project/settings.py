@@ -25,6 +25,8 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'crispy_bootstrap5',
     'core',
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 # MIDDLEWARE
@@ -38,6 +40,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
 
 ROOT_URLCONF = 'csass_project.urls'
 
@@ -61,7 +64,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'csass_project.wsgi.application'
 
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -75,6 +77,21 @@ DATABASES = {
         },
     }
 }
+
+
+"""DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres.nncgtynykiztqxglbiqn',
+        'PASSWORD': 'n*BM8exDiG4BQAQ',
+        'HOST': 'db.nncgtynykiztqxglbiqn.supabase.co',
+        'PORT': '5432',
+        'OPTIONS': {
+            'connect_timeout': 10, 'sslmode': 'require',
+        },
+    }
+}"""
 
 
 # CUSTOM USER MODEL
@@ -126,8 +143,16 @@ if (BASE_DIR / 'static').exists():
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'dgpi01o5n',
+    'API_KEY': '795278697945195',
+    'API_SECRET': 'Rn1hL1iFA853KD-HaBVC6Qic8G8',
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
 # DEFAULT FILE STORAGE (Local)
-DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+#DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 # AUTH / LOGIN
 LOGIN_URL = 'login'

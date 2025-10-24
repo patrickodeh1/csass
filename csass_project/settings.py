@@ -64,34 +64,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'csass_project.wsgi.application'
 
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='3306'),
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
-    }
-}
-
-
-"""DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
         'USER': 'postgres.nncgtynykiztqxglbiqn',
         'PASSWORD': 'n*BM8exDiG4BQAQ',
-        'HOST': 'db.nncgtynykiztqxglbiqn.supabase.co',
+        'HOST': 'aws-1-eu-north-1.pooler.supabase.com',
         'PORT': '5432',
         'OPTIONS': {
-            'connect_timeout': 10, 'sslmode': 'require',
+            'sslmode': 'require',
         },
     }
-}"""
+}
 
 
 # CUSTOM USER MODEL
@@ -138,6 +124,9 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 if (BASE_DIR / 'static').exists():
     STATICFILES_DIRS = [BASE_DIR / 'static']
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 
 # MEDIA FILES
 MEDIA_URL = '/media/'

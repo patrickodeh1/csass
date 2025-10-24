@@ -6,7 +6,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY
 SECRET_KEY = config('SECRET_KEY', default='@(ggq*4*-!r=so-c=7mguzii1#hwd$26+zb!girkmvkz4_h^)&')
-DEBUG = config('DEBUG', default=False, cast=bool)
+#DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = True
 ALLOWED_HOSTS = [
     'csass-production.up.railway.app',
     'localhost',

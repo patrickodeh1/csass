@@ -8,6 +8,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-temp-key')
 DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = [
+    'csass-production.up.railway.app',
+    'localhost',
     'booking.revenueaccelerationunit.com',
 ]
 

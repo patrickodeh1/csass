@@ -124,11 +124,11 @@ def delete_subsequent_timeslots(booking):
 
 def generate_timeslots_for_cycle(salesman=None):
     """
-    Generate timeslots automatically for each active salesman within the active 2-week cycle.
-    - Only Monday to Friday
-    - From 9:00 AM to 7:00 PM (30-minute intervals)
-    - For both appointment types: zoom and in_person
-    If a 'salesman' object is provided, slots are generated only for that salesman.
+    Generate timeslots automatically for each active salesman.
+    NOW USES INDIVIDUAL SALESMAN SETTINGS:
+    - Days ahead from salesman.booking_advance_days
+    - Weekdays from salesman.booking_weekdays
+    - Time range from salesman.booking_start_time and booking_end_time
     Uses bulk_create for performance optimization.
     """
     import logging
@@ -137,29 +137,49 @@ def generate_timeslots_for_cycle(salesman=None):
     cycle = AvailabilityCycle.get_current_cycle()
     logger.info(f"Using cycle: {cycle.start_date} to {cycle.end_date}")
 
-    start_date, end_date = cycle.start_date, cycle.end_date
+    start_date = timezone.now().date()
     
     if salesman:
         salesmen = [salesman]
         logger.info(f"Generating slots for specific salesman: {salesman.get_full_name()} (ID: {salesman.id})")
     else:
         salesmen = User.objects.filter(is_active_salesman=True, is_active=True)
-        logger.info(f"Generating slots for {salesmen.count()} active salesmen")
-
+        logger.info(f"Generating slots for all {salesmen.count()} active salesmen")
+    
     total_slots_created = 0
-    for s_man in salesmen: # Renamed to s_man to avoid conflict with the parameter
-        # Pre-calculate all slots for this salesman
+    for s_man in salesmen:
+        # Use individual salesman settings
+        days_ahead = s_man.booking_advance_days
+        end_date = start_date + timedelta(days=days_ahead - 1)
+        
+        logger.info(f"Generating {days_ahead} days ahead for {s_man.get_full_name()} (until {end_date})")
+        
+        # Parse enabled weekdays from salesman settings
+        enabled_weekdays = set()
+        if s_man.booking_weekdays:
+            try:
+                enabled_weekdays = set(int(day.strip()) for day in s_man.booking_weekdays.split(',') if day.strip())
+            except ValueError:
+                logger.warning(f"Invalid weekday configuration for {s_man.get_full_name()}, defaulting to Mon-Fri")
+                enabled_weekdays = {0, 1, 2, 3, 4}
+        else:
+            enabled_weekdays = {0, 1, 2, 3, 4}
+        
+        logger.info(f"Enabled weekdays for {s_man.get_full_name()}: {enabled_weekdays}")
+        
+        # Get time range from salesman settings
+        start_time = s_man.booking_start_time
+        end_time = s_man.booking_end_time
+        
         slots_to_create = []
         current_date = start_date
         
         while current_date <= end_date:
-            # Weekday check: 0=Mon ... 6=Sun -> only Mon-Fri
-            if current_date.weekday() < 5:
-                start = time(9, 0)
-                end = time(19, 0)
-                current_dt = datetime.combine(current_date, start)
+            if current_date.weekday() in enabled_weekdays:
+                current_dt = datetime.combine(current_date, start_time)
+                end_dt = datetime.combine(current_date, end_time)
 
-                while current_dt.time() < end:
+                while current_dt.time() < end_dt.time():
                     for appt_type in ['zoom', 'in_person']:
                         slots_to_create.append(
                             AvailableTimeSlot(
@@ -172,10 +192,9 @@ def generate_timeslots_for_cycle(salesman=None):
                             )
                         )
                     current_dt += timedelta(minutes=30)
-            # Next day
+            
             current_date += timedelta(days=1)
         
-        # Bulk create all slots for this salesman (PostgreSQL ON CONFLICT DO NOTHING)
         if slots_to_create:
             created_slots = AvailableTimeSlot.objects.bulk_create(
                 slots_to_create, 

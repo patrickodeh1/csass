@@ -123,6 +123,10 @@
                                     <span class="badge bg-success">
                                         <i class="bi bi-check-circle"></i> Confirmed
                                     </span>
+                                {% elif booking.status == 'no_show' %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Confirmed
+                                    </span>
                                 {% elif booking.status == 'completed' %}
                                     <span class="badge bg-secondary">
                                         <i class="bi bi-check-circle-fill"></i> Completed

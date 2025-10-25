@@ -659,10 +659,14 @@ def pending_bookings_view(request):
         bookings = bookings.filter(status='pending')
     elif status_filter == 'approved':
         bookings = bookings.filter(status='confirmed')
+    elif status_filter == 'no_show':
+        bookings = bookings.filter(status='no_show')
+    elif status_filter == 'completed':
+        bookings = bookings.filter(status='completed')
     elif status_filter == 'declined':
         bookings = bookings.filter(status='declined')
     elif status_filter == 'all':
-        bookings = bookings.filter(status__in=['pending', 'declined', 'confirmed'])
+        bookings = bookings.filter(status__in=['pending', 'declined', 'confirmed', 'no_show'])
 
     bookings = bookings.order_by('-created_at')
 
@@ -676,16 +680,22 @@ def pending_bookings_view(request):
         pending_count = Booking.objects.filter(status='pending', salesman=request.user).count()
         approved_count = Booking.objects.filter(status='confirmed', salesman=request.user).count()
         declined_count = Booking.objects.filter(status='declined', salesman=request.user).count()
+        no_show_count = Booking.objects.filter(status='no_show', salesman=request.user).count()
+        completed_count = Booking.objects.filter(status='completed', salesman=request.user).count()
     else:
         pending_count = Booking.objects.filter(status='pending').count()
         approved_count = Booking.objects.filter(status='confirmed').count()
         declined_count = Booking.objects.filter(status='declined').count()
+        no_show_count = Booking.objects.filter(status='no_show').count()
+        completed_count = Booking.objects.filter(status='completed').count()
     
     context = {
         'page_obj': page_obj,
         'status_filter': status_filter,
         'pending_count': pending_count,
         'approved_count': approved_count,
+        'no_show_count': no_show_count,
+        'completed_count': completed_count,
         'declined_count': declined_count,
         'is_salesman': is_salesman and not is_admin,
         'is_admin': is_admin,
@@ -1455,7 +1465,7 @@ def commissions_view(request):
     ).select_related('client', 'salesman').order_by('-created_at')
     
     # Separate bookings by status - EVALUATE QUERYSETS EXPLICITLY
-    confirmed_bookings = list(all_bookings.filter(status__in=['confirmed', 'completed']))
+    confirmed_bookings = list(all_bookings.filter(status__in=['confirmed', 'completed', 'no_show']))
     pending_bookings = list(all_bookings.filter(status='pending'))
     declined_bookings = list(all_bookings.filter(status='declined'))
     
@@ -1669,7 +1679,7 @@ def payroll_view(request):
             user_commissions[user_id]['total'] += adjustment.amount
     
     # Get available periods
-    available_periods = get_payroll_periods(12)
+    available_periods = get_payroll_periods(2)
     
     # Calculate summary totals
     user_commissions_list = list(user_commissions.values())
@@ -2105,7 +2115,13 @@ def settings_view(request):
                 config = form.save(commit=False)
                 config.updated_by = request.user
                 config.save()
-                messages.success(request, 'General settings updated successfully!')
+                
+                if config.autogeneration_enabled:
+                    from .utils import generate_timeslots_for_cycle
+                    generate_timeslots_for_cycle()
+                    messages.success(request, 'General settings updated and timeslots generated successfully!')
+                else:
+                    messages.success(request, 'General settings updated successfully!')
                 return redirect('settings')
             else:
                 # Form has errors - will be displayed in template
@@ -2266,16 +2282,75 @@ def client_detail(request, pk):
 # ============================================================
 @login_required
 def timeslots_view(request):
-    """Main availability dashboard view with mass delete functionality"""
+    """Main availability dashboard view with mass delete and auto-generation functionality"""
     is_admin = request.user.is_staff
 
-    # Auto-inactivate past and elapsed slots
-    try:
-        mark_past_slots_inactive()
-        mark_elapsed_today_slots_inactive()
-    except Exception:
-        pass
-
+    # Handle auto-generation trigger
+    if request.method == 'POST' and request.POST.get('trigger_generation'):
+        selected_salesman_id = request.GET.get('salesman') if is_admin else None
+        target_user = None
+        
+        if is_admin and selected_salesman_id:
+            target_user = User.objects.get(id=selected_salesman_id)
+        elif not is_admin:
+            target_user = request.user
+        
+        if target_user:
+            try:
+                from .utils import generate_timeslots_for_cycle
+                generate_timeslots_for_cycle(salesman=target_user)
+                messages.success(
+                    request, 
+                    f'✓ Generated slots for {target_user.get_full_name()} based on their settings: '
+                    f'{target_user.booking_advance_days} days ahead, '
+                    f'{target_user.booking_start_time.strftime("%I:%M %p")} - {target_user.booking_end_time.strftime("%I:%M %p")}'
+                )
+            except Exception as e:
+                messages.error(request, f'Error generating slots: {str(e)}')
+        
+        return redirect('timeslots')
+    
+    # Handle booking settings update (existing code)
+    if request.method == 'POST' and request.POST.get('update_booking_advance'):
+        booking_advance_days = request.POST.get('booking_advance_days')
+        booking_start_time = request.POST.get('booking_start_time')
+        booking_end_time = request.POST.get('booking_end_time')
+        booking_weekdays_selected = request.POST.getlist('booking_weekdays_display')
+        
+        selected_salesman_id = request.GET.get('salesman') if is_admin else None
+        target_user = None
+        
+        if is_admin and selected_salesman_id:
+            target_user = User.objects.get(id=selected_salesman_id)
+        elif not is_admin:
+            target_user = request.user
+        
+        if target_user:
+            try:
+                if booking_advance_days:
+                    booking_advance_days = int(booking_advance_days)
+                    if not (1 <= booking_advance_days <= 365):
+                        messages.error(request, 'Days in advance must be between 1 and 365.')
+                    else:
+                        target_user.booking_advance_days = booking_advance_days
+                
+                if booking_start_time:
+                    target_user.booking_start_time = booking_start_time
+                if booking_end_time:
+                    target_user.booking_end_time = booking_end_time
+                
+                if booking_weekdays_selected:
+                    target_user.booking_weekdays = ','.join(booking_weekdays_selected)
+                else:
+                    target_user.booking_weekdays = ''
+                
+                target_user.save(update_fields=['booking_advance_days', 'booking_start_time', 'booking_end_time', 'booking_weekdays'])
+                messages.success(request, '✓ Auto-generation settings updated successfully.')
+                
+            except (ValueError, User.DoesNotExist) as e:
+                messages.error(request, f'Error updating settings: {str(e)}')
+    
+    # Rest of existing code...
     # Handle bulk delete (POST request)
     if request.method == 'POST' and is_admin:
         bulk_action = request.POST.get('bulk_action')
@@ -2288,7 +2363,6 @@ def timeslots_view(request):
                 messages.warning(request, 'No slots selected for deletion.')
             return redirect('timeslots')
         
-        # Handle other POST actions (cleanup, delete cycle)
         if 'cleanup_slots' in request.POST:
             count = cleanup_old_slots()
             messages.info(request, f'Marked {count} old unbooked slots as inactive.')
@@ -2300,17 +2374,15 @@ def timeslots_view(request):
                 messages.success(request, 'Current 2-week cycle deleted. A new cycle will be created automatically.')
             return redirect('timeslots')
 
-    # Ensure there's an active cycle
+    # Existing queryset and filter logic...
     selected_cycle_id = request.GET.get('cycle')
     selected_salesman_id = request.GET.get('salesman') if is_admin else None
     cycles = AvailabilityCycle.objects.all().order_by('-start_date')
     cycle = AvailabilityCycle.objects.filter(id=selected_cycle_id).first() or AvailabilityCycle.get_current_cycle()
 
-    # Filters
     selected_day = request.GET.get('day')
     appointment_type = request.GET.get('type')
 
-    # Base queryset: slots for the selected cycle
     slots = AvailableTimeSlot.objects.filter(cycle=cycle)
 
     if selected_day:
@@ -2323,10 +2395,8 @@ def timeslots_view(request):
     if not is_admin:
         slots = slots.filter(salesman=request.user)
 
-    # Order with active slots first
     slots = slots.select_related('salesman', 'created_by').order_by('-is_active', 'date', 'start_time', 'salesman')
 
-    # PAGINATION - Show 57 slots per page (as requested)
     paginator = Paginator(slots, 57)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -2334,6 +2404,40 @@ def timeslots_view(request):
     salesmen = None
     if is_admin:
         salesmen = User.objects.filter(is_active_salesman=True, is_active=True).order_by('first_name', 'last_name')
+
+    # Get settings for the current viewed salesman
+    booking_advance_days = None
+    booking_start_time = None
+    booking_end_time = None
+    booking_weekdays_selected = []
+    
+    if is_admin and selected_salesman_id:
+        try:
+            salesman = User.objects.get(id=selected_salesman_id, is_active_salesman=True)
+            booking_advance_days = salesman.booking_advance_days
+            booking_start_time = salesman.booking_start_time
+            booking_end_time = salesman.booking_end_time
+            booking_weekdays_selected = salesman.booking_weekdays.split(',') if salesman.booking_weekdays else []
+        except User.DoesNotExist:
+            booking_advance_days = request.user.booking_advance_days
+            booking_start_time = request.user.booking_start_time
+            booking_end_time = request.user.booking_end_time
+            booking_weekdays_selected = request.user.booking_weekdays.split(',') if request.user.booking_weekdays else []
+    elif not is_admin:
+        booking_advance_days = request.user.booking_advance_days
+        booking_start_time = request.user.booking_start_time
+        booking_end_time = request.user.booking_end_time
+        booking_weekdays_selected = request.user.booking_weekdays.split(',') if request.user.booking_weekdays else []
+
+    weekday_choices = [
+        ('0', 'Monday'),
+        ('1', 'Tuesday'),
+        ('2', 'Wednesday'),
+        ('3', 'Thursday'),
+        ('4', 'Friday'),
+        ('5', 'Saturday'),
+        ('6', 'Sunday'),
+    ]
 
     context = {
         'page_obj': page_obj,
@@ -2344,6 +2448,11 @@ def timeslots_view(request):
         'selected_salesman': selected_salesman_id,
         'salesmen': salesmen,
         'is_admin': is_admin,
+        'booking_advance_days': booking_advance_days,
+        'booking_start_time': booking_start_time,
+        'booking_end_time': booking_end_time,
+        'booking_weekdays_selected': booking_weekdays_selected,
+        'weekday_choices': weekday_choices,
     }
     return render(request, 'timeslots.html', context)
 

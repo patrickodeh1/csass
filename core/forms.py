@@ -630,7 +630,7 @@ class SystemConfigForm(forms.ModelForm):
             'company_name', 'timezone', 
             'default_commission_rate_in_person', 'default_commission_rate_zoom', 
             'zoom_link', 'reminder_lead_time_hours',
-            'zoom_enabled', 'in_person_enabled'
+            'zoom_enabled', 'in_person_enabled',
         ]
         widgets = {
             'company_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -646,7 +646,6 @@ class SystemConfigForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Add help text for better UX
         self.fields['company_name'].help_text = 'Company name displayed in emails and system'
         self.fields['timezone'].help_text = 'System timezone (e.g., America/New_York, UTC)'
         self.fields['default_commission_rate_in_person'].help_text = 'Default commission for in-person appointments ($)'

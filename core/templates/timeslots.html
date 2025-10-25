@@ -4,11 +4,12 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="row mb-4 align-items-center">
+    <div class="row mb-4 align-items-start">
         <div class="col">
             <h2><i class="bi bi-clock-history"></i> Time Slots Management</h2>
         </div>
         <div class="col-auto">
+        <div class="d-flex gap-2 flex-wrap">
             {% if is_admin %}
             <button type="button" class="btn btn-danger" id="bulkDeleteBtn" style="display: none;">
                 <i class="bi bi-trash"></i> Delete Selected (<span id="selectedCount">0</span>)
@@ -17,6 +18,23 @@
                 <i class="bi bi-plus-circle"></i> Create Slot
             </a>
             {% endif %}
+            
+            <!-- NEW: Generation Button - Available to both admin and salesman -->
+            <form method="post" style="display: inline;">
+                {% csrf_token %}
+                <input type="hidden" name="trigger_generation" value="1">
+                <button type="submit" class="btn btn-success" 
+                        onclick="return confirm('Generate slots based on your current settings?\n\nThis will create slots for the next {{ booking_advance_days }} days.')">
+                    <i class="bi bi-lightning-charge"></i> Generate Slots
+                </button>
+            </form>
+            
+            <!-- Settings Button - Available to both admin and salesman -->
+            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#autogenSettingsModal">
+                <i class="bi bi-gear"></i> Auto-generation Settings
+            </button>
+        </div>
+    </div>
         </div>
     </div>
 
@@ -189,6 +207,173 @@
     </form>
 </div>
 
+<!-- Auto-generation Settings Modal - Available to both admin and salesman -->
+<div class="modal fade" id="autogenSettingsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-lightning-charge-fill"></i> Slot Auto-generation Settings
+                    {% if is_admin and selected_salesman %}
+                        - {{ selected_salesman.get_full_name|default:request.user.get_full_name }}
+                    {% else %}
+                        - {{ request.user.get_full_name }}
+                    {% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="autogenSettingsForm">
+                {% csrf_token %}
+                <input type="hidden" name="update_booking_advance" value="1">
+                <div class="modal-body">
+                    <div class="alert alert-info mb-4">
+                        <i class="bi bi-info-circle"></i> 
+                        <strong>Your Personal Slot Generation Settings</strong><br>
+                        {% if booking_advance_days and booking_start_time and booking_end_time %}
+                        Slots will be generated {{ booking_advance_days }} days in advance, 
+                        from {{ booking_start_time|time:"g:i A" }} to {{ booking_end_time|time:"g:i A" }},
+                        on your selected days of the week.
+                        {% else %}
+                        Configure how far ahead and when your appointment slots should be generated.
+                        {% endif %}
+                    </div>
+
+                    <!-- Generation Window -->
+                    <h6 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-calendar-range"></i> Generation Window
+                    </h6>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Days in Advance</label>
+                            <div class="input-group" style="max-width: 300px;">
+                                <input type="number" 
+                                       class="form-control" 
+                                       name="booking_advance_days" 
+                                       min="1" 
+                                       max="365" 
+                                       value="{{ booking_advance_days|default:14 }}"
+                                       required>
+                                <span class="input-group-text">days</span>
+                            </div>
+                            <small class="form-text text-muted d-block mt-1">
+                                How far ahead to generate your appointment slots (1-365 days).<br>
+                                <strong>Example:</strong> If set to 14 days, slots will be generated for the next 2 weeks.
+                            </small>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Daily Time Range -->
+                    <h6 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-clock"></i> Daily Time Range
+                    </h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Start Time</label>
+                            <input type="time" 
+                                   class="form-control" 
+                                   name="booking_start_time" 
+                                   value="{% if booking_start_time %}{{ booking_start_time|time:'H:i' }}{% else %}09:00{% endif %}"
+                                   required>
+                            <small class="form-text text-muted d-block mt-1">
+                                Earliest time for your daily appointments
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">End Time</label>
+                            <input type="time" 
+                                   class="form-control" 
+                                   name="booking_end_time" 
+                                   value="{% if booking_end_time %}{{ booking_end_time|time:'H:i' }}{% else %}19:00{% endif %}"
+                                   required>
+                            <small class="form-text text-muted d-block mt-1">
+                                Latest time for your daily appointments
+                            </small>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        <strong>Note:</strong> Slots are generated in 30-minute intervals between your start and end times.
+                    </div>
+
+                    <hr>
+
+                    <!-- Active Days of Week -->
+                    <h6 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-calendar-week"></i> Active Days
+                    </h6>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Generate slots on these days:</label>
+                        <div class="row">
+                            {% for value, label in weekday_choices %}
+                            <div class="col-md-4 col-sm-6 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           name="booking_weekdays_display" 
+                                           value="{{ value }}" 
+                                           id="weekday_{{ value }}"
+                                           {% if value in booking_weekdays_selected %}checked{% endif %}>
+                                    <label class="form-check-label" for="weekday_{{ value }}">
+                                        {{ label }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <small class="form-text text-muted d-block mt-2">
+                            Select which days of the week you want to accept appointments
+                        </small>
+                    </div>
+
+                    <hr>
+
+                    <!-- Current Configuration Summary -->
+                    <div class="alert alert-light border">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-info-circle"></i> Current Configuration Summary
+                        </h6>
+                        <ul class="mb-0">
+                            <li><strong>Window:</strong> {{ booking_advance_days|default:14 }} days ahead</li>
+                            <li><strong>Time Range:</strong> 
+                                {% if booking_start_time and booking_end_time %}
+                                {{ booking_start_time|time:"g:i A" }} - {{ booking_end_time|time:"g:i A" }}
+                                {% else %}
+                                9:00 AM - 7:00 PM (default)
+                                {% endif %}
+                            </li>
+                            <li><strong>Active Days:</strong> 
+                                {% if booking_weekdays_selected %}
+                                    {% for day in booking_weekdays_selected %}
+                                        {% if day == '0' %}Mon{% elif day == '1' %}Tue{% elif day == '2' %}Wed{% elif day == '3' %}Thu{% elif day == '4' %}Fri{% elif day == '5' %}Sat{% elif day == '6' %}Sun{% endif %}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    Mon-Fri (default)
+                                {% endif %}
+                            </li>
+                            <li><strong>Slot Interval:</strong> 30 minutes</li>
+                            <li><strong>Types:</strong> Both Zoom & In-Person slots generated</li>
+                            <li class="mt-2 text-muted">
+                                <small>
+                                    <i class="bi bi-lightbulb"></i> 
+                                    After saving settings, click "Generate Slots" to create your availability.
+                                </small>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-save"></i> Save Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const selectAllCheckbox = document.getElementById('selectAll');

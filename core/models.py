@@ -64,6 +64,24 @@ class User(AbstractBaseUser, PermissionsMixin):
     commission_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     is_active_salesman = models.BooleanField(default=False)
     hire_date = models.DateField(null=True)
+    booking_advance_days = models.IntegerField(
+        default=14,
+        validators=[MinValueValidator(1), MinValueValidator(365)],
+        help_text="How many days in advance agents can book appointments (1-365 days)"
+    )
+    booking_start_time = models.TimeField(
+        default=time(9, 0),
+        help_text="Earliest time agents can book appointments"
+    )
+    booking_end_time = models.TimeField(
+        default=time(19, 0),
+        help_text="Latest time agents can book appointments"
+    )
+    booking_weekdays = models.CharField(
+        max_length=50,
+        default='0,1,2,3,4',
+        help_text="Comma-separated weekday numbers: 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun"
+    )
     
     # Status fields
     is_active = models.BooleanField(default=True)
@@ -82,6 +100,24 @@ class User(AbstractBaseUser, PermissionsMixin):
     failed_login_attempts = models.IntegerField(default=0)
     last_failed_login = models.DateTimeField(null=True, blank=True)
     
+    booking_advance_days = models.IntegerField(
+        default=14,
+        validators=[MinValueValidator(1), MinValueValidator(365)],
+        help_text="How many days in advance to generate slots (1-365 days)"
+    )
+    booking_start_time = models.TimeField(
+        default=time(9, 0),
+        help_text="Daily start time for generated slots"
+    )
+    booking_end_time = models.TimeField(
+        default=time(19, 0),
+        help_text="Daily end time for generated slots"
+    )
+    booking_weekdays = models.CharField(
+        max_length=50,
+        default='0,1,2,3,4',
+        help_text="Comma-separated weekday numbers for slot generation"
+    )
     objects = UserManager()
     
     USERNAME_FIELD = 'username'
@@ -268,7 +304,7 @@ class Booking(models.Model):
     
     def counts_for_commission(self):
         """Check if booking counts for commission - must be confirmed or completed"""
-        return self.status in ['confirmed', 'completed']
+        return self.status in ['confirmed', 'completed', 'no_show']
     
     def can_be_approved(self):
         """Check if booking can be approved"""

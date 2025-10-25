@@ -271,7 +271,6 @@
 </div>
 
 <script>
-// Preserve active tab on page reload
 document.addEventListener('DOMContentLoaded', function() {
     const activeTab = localStorage.getItem('activeSettingsTab');
     if (activeTab) {
@@ -279,7 +278,6 @@ document.addEventListener('DOMContentLoaded', function() {
         tabTrigger.show();
     }
     
-    // Save active tab
     document.querySelectorAll('#settingsTabs button').forEach(button => {
         button.addEventListener('click', function() {
             localStorage.setItem('activeSettingsTab', this.id.replace('-tab', ''));

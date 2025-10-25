@@ -7,34 +7,29 @@
     <div class="row mb-4 align-items-start">
         <div class="col">
             <h2><i class="bi bi-clock-history"></i> Time Slots Management</h2>
+            {% if not is_admin %}
+                <p class="text-muted mb-0">Manage your availability and auto-generation settings</p>
+            {% endif %}
         </div>
         <div class="col-auto">
-        <div class="d-flex gap-2 flex-wrap">
-            {% if is_admin %}
-            <button type="button" class="btn btn-danger" id="bulkDeleteBtn" style="display: none;">
-                <i class="bi bi-trash"></i> Delete Selected (<span id="selectedCount">0</span>)
-            </button>
-            <a href="{% url 'timeslot_create' %}" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Create Slot
-            </a>
-            {% endif %}
-            
-            <!-- NEW: Generation Button - Available to both admin and salesman -->
-            <form method="post" style="display: inline;">
-                {% csrf_token %}
-                <input type="hidden" name="trigger_generation" value="1">
-                <button type="submit" class="btn btn-success" 
-                        onclick="return confirm('Generate slots based on your current settings?\n\nThis will create slots for the next {{ booking_advance_days }} days.')">
+            <div class="d-flex gap-2 flex-wrap">
+                {% if is_admin %}
+                <button type="button" class="btn btn-danger" id="bulkDeleteBtn" style="display: none;">
+                    <i class="bi bi-trash"></i> Delete Selected (<span id="selectedCount">0</span>)
+                </button>
+                <a href="{% url 'timeslot_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create Slot
+                </a>
+                {% endif %}
+                
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#generateSlotsModal">
                     <i class="bi bi-lightning-charge"></i> Generate Slots
                 </button>
-            </form>
-            
-            <!-- Settings Button - Available to both admin and salesman -->
-            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#autogenSettingsModal">
-                <i class="bi bi-gear"></i> Auto-generation Settings
-            </button>
-        </div>
-    </div>
+                
+                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#autogenSettingsModal">
+                    <i class="bi bi-gear"></i> Auto-generation Settings
+                </button>
+            </div>
         </div>
     </div>
 
@@ -84,6 +79,29 @@
         </div>
     </form>
 
+    <!-- Meeting Types Status Alert -->
+    <div class="alert alert-info mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <strong><i class="bi bi-info-circle"></i> Meeting Types Status:</strong><br>
+                <span class="badge bg-{% if config.zoom_enabled %}success{% else %}secondary{% endif %} me-2">
+                    <i class="bi bi-camera-video"></i> Zoom: {% if config.zoom_enabled %}Enabled{% else %}Disabled{% endif %}
+                </span>
+                <span class="badge bg-{% if config.in_person_enabled %}success{% else %}secondary{% endif %}">
+                    <i class="bi bi-geo-alt"></i> In-Person: {% if config.in_person_enabled %}Enabled{% else %}Disabled{% endif %}
+                </span>
+            </div>
+            <div class="col-md-6 text-end">
+                <small class="text-muted">
+                    Only enabled meeting types will be generated. 
+                    {% if is_admin %}
+                        <a href="{% url 'settings' %}" class="alert-link">Change in Settings</a>
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+
     <!-- Mass Delete Form -->
     <form method="post" id="bulkDeleteForm" action="{% url 'timeslots' %}">
         {% csrf_token %}
@@ -91,7 +109,14 @@
         
         <div class="card shadow border-0">
             <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Time Slots ({{ page_obj.paginator.count }} total)</h5>
+                <h5 class="mb-0">
+                    Time Slots ({{ page_obj.paginator.count }} total)
+                    {% if current_salesman %}
+                        - {{ current_salesman.get_full_name }}
+                    {% elif not is_admin %}
+                        - {{ request.user.get_full_name }}
+                    {% endif %}
+                </h5>
                 {% if is_admin %}
                 <div class="form-check form-check-inline mb-0">
                     <input class="form-check-input" type="checkbox" id="selectAll">
@@ -162,9 +187,12 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="{% if is_admin %}8{% else %}7{% endif %}" class="text-center text-muted py-5">
+                                <td colspan="{% if is_admin %}7{% else %}6{% endif %}" class="text-center text-muted py-5">
                                     <i class="bi bi-inbox" style="font-size: 2rem;"></i>
                                     <p class="mt-3">No time slots found</p>
+                                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#generateSlotsModal">
+                                        <i class="bi bi-lightning-charge"></i> Generate Slots
+                                    </button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -207,35 +235,134 @@
     </form>
 </div>
 
-<!-- Auto-generation Settings Modal - Available to both admin and salesman -->
-<div class="modal fade" id="autogenSettingsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+<!-- Generate Slots Modal (NEW) -->
+<div class="modal fade" id="generateSlotsModal" tabindex="-1">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title">
-                    <i class="bi bi-lightning-charge-fill"></i> Slot Auto-generation Settings
-                    {% if is_admin and selected_salesman %}
-                        - {{ selected_salesman.get_full_name|default:request.user.get_full_name }}
+                    <i class="bi bi-lightning-charge-fill"></i> Generate Slots
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="generateSlotsForm">
+                {% csrf_token %}
+                <input type="hidden" name="trigger_generation" value="1">
+                <div class="modal-body">
+                    {% if is_admin %}
+                    <!-- Admin: Select Salesman -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Select Salesman</label>
+                        <select name="target_salesman" class="form-select" required id="targetSalesmanGenerate">
+                            <option value="">-- Select Salesman --</option>
+                            {% for s in salesmen %}
+                            <option value="{{ s.id }}" {% if current_salesman and current_salesman.id == s.id %}selected{% endif %}>
+                                {{ s.get_full_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">
+                            Choose which salesman to generate slots for
+                        </small>
+                    </div>
                     {% else %}
-                        - {{ request.user.get_full_name }}
+                    <!-- Salesman: Auto-set to current user -->
+                    <input type="hidden" name="target_salesman" value="{{ request.user.id }}">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        Generating slots for: <strong>{{ request.user.get_full_name }}</strong>
+                    </div>
                     {% endif %}
+
+                    <hr>
+
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Meeting Types</h6>
+                        <p class="mb-2">The following meeting types will be generated based on system settings:</p>
+                        <ul class="mb-0">
+                            {% if config.zoom_enabled %}
+                            <li><span class="badge bg-info"><i class="bi bi-camera-video"></i> Zoom</span> - Enabled</li>
+                            {% endif %}
+                            {% if config.in_person_enabled %}
+                            <li><span class="badge bg-primary"><i class="bi bi-geo-alt"></i> In-Person</span> - Enabled</li>
+                            {% endif %}
+                            {% if not config.zoom_enabled and not config.in_person_enabled %}
+                            <li class="text-danger">⚠️ No meeting types are enabled!</li>
+                            {% endif %}
+                        </ul>
+                        {% if is_admin %}
+                        <small class="text-muted d-block mt-2">
+                            <a href="{% url 'settings' %}" class="alert-link">Change meeting type settings</a>
+                        </small>
+                        {% endif %}
+                    </div>
+
+                    {% if not config.zoom_enabled and not config.in_person_enabled %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-x-circle"></i> Cannot generate slots. Please enable at least one meeting type in system settings.
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success" {% if not config.zoom_enabled and not config.in_person_enabled %}disabled{% endif %}>
+                        <i class="bi bi-lightning-charge"></i> Generate Slots</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Auto-generation Settings Modal -->
+<div class="modal fade" id="autogenSettingsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-gear-fill"></i> Slot Auto-generation Settings
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form method="post" id="autogenSettingsForm">
                 {% csrf_token %}
-                <input type="hidden" name="update_booking_advance" value="1">
+                <input type="hidden" name="update_autogen_settings" value="1">
                 <div class="modal-body">
-                    <div class="alert alert-info mb-4">
+                    {% if is_admin %}
+                    <!-- Admin: Select Salesman -->
+                    <div class="mb-4 pb-3 border-bottom">
+                        <label class="form-label fw-bold">Select Salesman</label>
+                        <select name="target_salesman" class="form-select" required id="targetSalesmanSettings">
+                            <option value="">-- Select Salesman --</option>
+                            {% for s in salesmen %}
+                            <option value="{{ s.id }}" 
+                                    data-advance-days="{{ s.booking_advance_days }}"
+                                    data-start-time="{{ s.booking_start_time|time:'H:i' }}"
+                                    data-end-time="{{ s.booking_end_time|time:'H:i' }}"
+                                    data-weekdays="{{ s.booking_weekdays }}"
+                                    {% if current_salesman and current_salesman.id == s.id %}selected{% endif %}>
+                                {{ s.get_full_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">
+                            Choose which salesman's settings to configure
+                        </small>
+                    </div>
+                    {% else %}
+                    <!-- Salesman: Auto-set to current user -->
+                    <input type="hidden" name="target_salesman" value="{{ request.user.id }}">
+                    <div class="alert alert-info mb-3">
+                        <i class="bi bi-person-circle"></i>
+                        Configuring settings for: <strong>{{ request.user.get_full_name }}</strong>
+                    </div>
+                    {% endif %}
+
+                    <div class="alert alert-success mb-4">
                         <i class="bi bi-info-circle"></i> 
-                        <strong>Your Personal Slot Generation Settings</strong><br>
-                        {% if booking_advance_days and booking_start_time and booking_end_time %}
-                        Slots will be generated {{ booking_advance_days }} days in advance, 
-                        from {{ booking_start_time|time:"g:i A" }} to {{ booking_end_time|time:"g:i A" }},
-                        on your selected days of the week.
-                        {% else %}
-                        Configure how far ahead and when your appointment slots should be generated.
-                        {% endif %}
+                        <strong>Personal Slot Generation Settings</strong><br>
+                        Configure how your appointment slots are automatically generated.
                     </div>
 
                     <!-- Generation Window -->
@@ -249,6 +376,7 @@
                                 <input type="number" 
                                        class="form-control" 
                                        name="booking_advance_days" 
+                                       id="bookingAdvanceDays"
                                        min="1" 
                                        max="365" 
                                        value="{{ booking_advance_days|default:14 }}"
@@ -274,10 +402,11 @@
                             <input type="time" 
                                    class="form-control" 
                                    name="booking_start_time" 
+                                   id="bookingStartTime"
                                    value="{% if booking_start_time %}{{ booking_start_time|time:'H:i' }}{% else %}09:00{% endif %}"
                                    required>
                             <small class="form-text text-muted d-block mt-1">
-                                Earliest time for your daily appointments
+                                Earliest time for daily appointments
                             </small>
                         </div>
                         <div class="col-md-6">
@@ -285,16 +414,17 @@
                             <input type="time" 
                                    class="form-control" 
                                    name="booking_end_time" 
+                                   id="bookingEndTime"
                                    value="{% if booking_end_time %}{{ booking_end_time|time:'H:i' }}{% else %}19:00{% endif %}"
                                    required>
                             <small class="form-text text-muted d-block mt-1">
-                                Latest time for your daily appointments
+                                Latest time for daily appointments
                             </small>
                         </div>
                     </div>
                     <div class="alert alert-warning">
                         <i class="bi bi-exclamation-triangle"></i> 
-                        <strong>Note:</strong> Slots are generated in 30-minute intervals between your start and end times.
+                        <strong>Note:</strong> Slots are generated in 30-minute intervals between start and end times.
                     </div>
 
                     <hr>
@@ -305,11 +435,11 @@
                     </h6>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Generate slots on these days:</label>
-                        <div class="row">
+                        <div class="row" id="weekdayCheckboxes">
                             {% for value, label in weekday_choices %}
                             <div class="col-md-4 col-sm-6 mb-2">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" 
+                                    <input class="form-check-input weekday-checkbox" type="checkbox" 
                                            name="booking_weekdays_display" 
                                            value="{{ value }}" 
                                            id="weekday_{{ value }}"
@@ -322,7 +452,52 @@
                             {% endfor %}
                         </div>
                         <small class="form-text text-muted d-block mt-2">
-                            Select which days of the week you want to accept appointments
+                            Select which days of the week to accept appointments
+                        </small>
+                    </div>
+
+                    <hr>
+
+                    <!-- Meeting Types Info -->
+                    <h6 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-calendar2-check"></i> Meeting Types
+                    </h6>
+                    <div class="alert alert-light border">
+                        <p class="mb-2"><strong>Generated Meeting Types (from System Settings):</strong></p>
+                        <div class="mb-2">
+                            {% if config.zoom_enabled %}
+                            <span class="badge bg-info me-2">
+                                <i class="bi bi-camera-video"></i> Zoom - Will be generated
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary me-2">
+                                <i class="bi bi-camera-video"></i> Zoom - Disabled
+                            </span>
+                            {% endif %}
+                            
+                            {% if config.in_person_enabled %}
+                            <span class="badge bg-primary">
+                                <i class="bi bi-geo-alt"></i> In-Person - Will be generated
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-geo-alt"></i> In-Person - Disabled
+                            </span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">
+                            {% if not config.zoom_enabled and not config.in_person_enabled %}
+                            <span class="text-danger">⚠️ No meeting types are enabled. Slot generation will fail.</span>
+                            {% elif config.zoom_enabled and config.in_person_enabled %}
+                            Both Zoom and In-Person slots will be generated for each time interval.
+                            {% elif config.zoom_enabled %}
+                            Only Zoom slots will be generated.
+                            {% else %}
+                            Only In-Person slots will be generated.
+                            {% endif %}
+                            {% if is_admin %}
+                            <a href="{% url 'settings' %}" class="alert-link">Change in Settings</a>
+                            {% endif %}
                         </small>
                     </div>
 
@@ -331,28 +506,42 @@
                     <!-- Current Configuration Summary -->
                     <div class="alert alert-light border">
                         <h6 class="alert-heading">
-                            <i class="bi bi-info-circle"></i> Current Configuration Summary
+                            <i class="bi bi-list-check"></i> Configuration Summary
                         </h6>
-                        <ul class="mb-0">
-                            <li><strong>Window:</strong> {{ booking_advance_days|default:14 }} days ahead</li>
+                        <ul class="mb-0" id="configSummary">
+                            <li><strong>Window:</strong> <span id="summaryDays">{{ booking_advance_days|default:14 }}</span> days ahead</li>
                             <li><strong>Time Range:</strong> 
+                                <span id="summaryTime">
                                 {% if booking_start_time and booking_end_time %}
                                 {{ booking_start_time|time:"g:i A" }} - {{ booking_end_time|time:"g:i A" }}
                                 {% else %}
-                                9:00 AM - 7:00 PM (default)
+                                9:00 AM - 7:00 PM
                                 {% endif %}
+                                </span>
                             </li>
                             <li><strong>Active Days:</strong> 
+                                <span id="summaryDays">
                                 {% if booking_weekdays_selected %}
                                     {% for day in booking_weekdays_selected %}
                                         {% if day == '0' %}Mon{% elif day == '1' %}Tue{% elif day == '2' %}Wed{% elif day == '3' %}Thu{% elif day == '4' %}Fri{% elif day == '5' %}Sat{% elif day == '6' %}Sun{% endif %}{% if not forloop.last %}, {% endif %}
                                     {% endfor %}
                                 {% else %}
-                                    Mon-Fri (default)
+                                    Mon-Fri
                                 {% endif %}
+                                </span>
                             </li>
                             <li><strong>Slot Interval:</strong> 30 minutes</li>
-                            <li><strong>Types:</strong> Both Zoom & In-Person slots generated</li>
+                            <li><strong>Meeting Types:</strong> 
+                                {% if config.zoom_enabled and config.in_person_enabled %}
+                                    Zoom & In-Person
+                                {% elif config.zoom_enabled %}
+                                    Zoom only
+                                {% elif config.in_person_enabled %}
+                                    In-Person only
+                                {% else %}
+                                    <span class="text-danger">None enabled</span>
+                                {% endif %}
+                            </li>
                             <li class="mt-2 text-muted">
                                 <small>
                                     <i class="bi bi-lightbulb"></i> 
@@ -366,7 +555,7 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="bi bi-x-circle"></i> Cancel
                     </button>
-                    <button type="submit" class="btn btn-success">
+                    <button type="submit" class="btn btn-info">
                         <i class="bi bi-save"></i> Save Settings
                     </button>
                 </div>
@@ -374,23 +563,27 @@
         </div>
     </div>
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Bulk delete functionality
     const selectAllCheckbox = document.getElementById('selectAll');
     const slotCheckboxes = document.querySelectorAll('.slot-checkbox');
     const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
     const selectedCount = document.getElementById('selectedCount');
     const bulkDeleteForm = document.getElementById('bulkDeleteForm');
     
-    // Update selected count and button visibility
     function updateBulkDeleteBtn() {
         const checkedBoxes = document.querySelectorAll('.slot-checkbox:checked');
         const count = checkedBoxes.length;
-        selectedCount.textContent = count;
-        bulkDeleteBtn.style.display = count > 0 ? 'inline-block' : 'none';
+        if (selectedCount) {
+            selectedCount.textContent = count;
+        }
+        if (bulkDeleteBtn) {
+            bulkDeleteBtn.style.display = count > 0 ? 'inline-block' : 'none';
+        }
     }
     
-    // Select all functionality
     if (selectAllCheckbox) {
         selectAllCheckbox.addEventListener('change', function() {
             slotCheckboxes.forEach(checkbox => {
@@ -400,12 +593,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Individual checkbox change
     slotCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function() {
             updateBulkDeleteBtn();
             
-            // Update "select all" state
             const allChecked = Array.from(slotCheckboxes).every(cb => cb.checked);
             const someChecked = Array.from(slotCheckboxes).some(cb => cb.checked);
             if (selectAllCheckbox) {
@@ -415,7 +606,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Bulk delete button click
     if (bulkDeleteBtn) {
         bulkDeleteBtn.addEventListener('click', function() {
             const count = document.querySelectorAll('.slot-checkbox:checked').length;
@@ -424,6 +614,82 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Admin: Auto-load salesman settings when selected in settings modal
+    const targetSalesmanSettings = document.getElementById('targetSalesmanSettings');
+    if (targetSalesmanSettings) {
+        targetSalesmanSettings.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                // Update form fields with selected salesman's data
+                const advanceDays = selectedOption.getAttribute('data-advance-days') || 14;
+                const startTime = selectedOption.getAttribute('data-start-time') || '09:00';
+                const endTime = selectedOption.getAttribute('data-end-time') || '19:00';
+                const weekdays = selectedOption.getAttribute('data-weekdays') || '0,1,2,3,4';
+                
+                document.getElementById('bookingAdvanceDays').value = advanceDays;
+                document.getElementById('bookingStartTime').value = startTime;
+                document.getElementById('bookingEndTime').value = endTime;
+                
+                // Update weekday checkboxes
+                const weekdayArray = weekdays.split(',');
+                document.querySelectorAll('.weekday-checkbox').forEach(checkbox => {
+                    checkbox.checked = weekdayArray.includes(checkbox.value);
+                });
+                
+                // Update summary
+                updateSummary();
+            }
+        });
+    }
+
+    // Real-time summary update
+    function updateSummary() {
+        const days = document.getElementById('bookingAdvanceDays')?.value || 14;
+        const startTime = document.getElementById('bookingStartTime')?.value || '09:00';
+        const endTime = document.getElementById('bookingEndTime')?.value || '19:00';
+        
+        if (document.getElementById('summaryDays')) {
+            document.getElementById('summaryDays').textContent = days;
+        }
+        
+        // Format time display
+        function formatTime(time) {
+            const [hours, minutes] = time.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        }
+        
+        if (document.getElementById('summaryTime')) {
+            document.getElementById('summaryTime').textContent = 
+                `${formatTime(startTime)} - ${formatTime(endTime)}`;
+        }
+        
+        // Update selected days summary
+        const checkedDays = Array.from(document.querySelectorAll('.weekday-checkbox:checked'));
+        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const selectedDaysText = checkedDays.map(cb => dayNames[parseInt(cb.value)]).join(', ') || 'None';
+        
+        const summaryDaysElement = document.querySelector('#configSummary #summaryDays');
+        if (summaryDaysElement) {
+            summaryDaysElement.textContent = selectedDaysText;
+        }
+    }
+
+    // Add event listeners for real-time updates
+    const formInputs = ['bookingAdvanceDays', 'bookingStartTime', 'bookingEndTime'];
+    formInputs.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', updateSummary);
+        }
+    });
+
+    document.querySelectorAll('.weekday-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateSummary);
+    });
 });
 </script>
 {% endblock %}

@@ -125,14 +125,29 @@ def delete_subsequent_timeslots(booking):
 def generate_timeslots_for_cycle(salesman=None):
     """
     Generate timeslots automatically for each active salesman.
-    NOW USES INDIVIDUAL SALESMAN SETTINGS:
+    NOW USES INDIVIDUAL SALESMAN SETTINGS AND RESPECTS SYSTEM CONFIG:
     - Days ahead from salesman.booking_advance_days
     - Weekdays from salesman.booking_weekdays
     - Time range from salesman.booking_start_time and booking_end_time
+    - Meeting types from SystemConfig (zoom_enabled, in_person_enabled)
     Uses bulk_create for performance optimization.
     """
     import logging
     logger = logging.getLogger(__name__)
+    
+    # Get system config to check which meeting types are enabled
+    config = SystemConfig.get_config()
+    enabled_types = []
+    if config.zoom_enabled:
+        enabled_types.append('zoom')
+    if config.in_person_enabled:
+        enabled_types.append('in_person')
+    
+    if not enabled_types:
+        logger.warning("No meeting types are enabled in system config. Skipping slot generation.")
+        return None
+    
+    logger.info(f"Enabled meeting types: {enabled_types}")
     
     cycle = AvailabilityCycle.get_current_cycle()
     logger.info(f"Using cycle: {cycle.start_date} to {cycle.end_date}")
@@ -180,7 +195,8 @@ def generate_timeslots_for_cycle(salesman=None):
                 end_dt = datetime.combine(current_date, end_time)
 
                 while current_dt.time() < end_dt.time():
-                    for appt_type in ['zoom', 'in_person']:
+                    # Only generate slots for enabled meeting types
+                    for appt_type in enabled_types:
                         slots_to_create.append(
                             AvailableTimeSlot(
                                 cycle=cycle,

@@ -2287,21 +2287,42 @@ def timeslots_view(request):
 
     # Handle auto-generation trigger
     if request.method == 'POST' and request.POST.get('trigger_generation'):
-        selected_salesman_id = request.GET.get('salesman') if is_admin else None
+        target_salesman_id = request.POST.get('target_salesman')  # NEW: Get from POST instead of GET
         target_user = None
         
-        if is_admin and selected_salesman_id:
-            target_user = User.objects.get(id=selected_salesman_id)
+        if is_admin and target_salesman_id:
+            try:
+                target_user = User.objects.get(id=target_salesman_id, is_active_salesman=True)
+            except User.DoesNotExist:
+                messages.error(request, 'Selected salesman not found.')
+                return redirect('timeslots')
         elif not is_admin:
             target_user = request.user
+        elif is_admin and not target_salesman_id:
+            messages.error(request, 'Please select a salesman to generate slots for.')
+            return redirect('timeslots')
         
         if target_user:
             try:
                 from .utils import generate_timeslots_for_cycle
+                from .models import SystemConfig
+                config = SystemConfig.get_config()
+                
+                # Check which meeting types are enabled globally and generate accordingly
+                generated_types = []
+                if config.zoom_enabled:
+                    generated_types.append('Zoom')
+                if config.in_person_enabled:
+                    generated_types.append('In-Person')
+                
+                if not generated_types:
+                    messages.warning(request, 'Both meeting types are disabled in system settings. Please enable at least one meeting type.')
+                    return redirect('timeslots')
+                
                 generate_timeslots_for_cycle(salesman=target_user)
                 messages.success(
                     request, 
-                    f'✓ Generated slots for {target_user.get_full_name()} based on their settings: '
+                    f'✓ Generated {", ".join(generated_types)} slots for {target_user.get_full_name()} based on their settings: '
                     f'{target_user.booking_advance_days} days ahead, '
                     f'{target_user.booking_start_time.strftime("%I:%M %p")} - {target_user.booking_end_time.strftime("%I:%M %p")}'
                 )
@@ -2310,20 +2331,27 @@ def timeslots_view(request):
         
         return redirect('timeslots')
     
-    # Handle booking settings update (existing code)
-    if request.method == 'POST' and request.POST.get('update_booking_advance'):
+    # Handle auto-generation settings update
+    if request.method == 'POST' and request.POST.get('update_autogen_settings'):
+        target_salesman_id = request.POST.get('target_salesman')  # NEW: Get from POST
         booking_advance_days = request.POST.get('booking_advance_days')
         booking_start_time = request.POST.get('booking_start_time')
         booking_end_time = request.POST.get('booking_end_time')
         booking_weekdays_selected = request.POST.getlist('booking_weekdays_display')
         
-        selected_salesman_id = request.GET.get('salesman') if is_admin else None
         target_user = None
         
-        if is_admin and selected_salesman_id:
-            target_user = User.objects.get(id=selected_salesman_id)
+        if is_admin and target_salesman_id:
+            try:
+                target_user = User.objects.get(id=target_salesman_id, is_active_salesman=True)
+            except User.DoesNotExist:
+                messages.error(request, 'Selected salesman not found.')
+                return redirect('timeslots')
         elif not is_admin:
             target_user = request.user
+        elif is_admin and not target_salesman_id:
+            messages.error(request, 'Please select a salesman to update settings for.')
+            return redirect('timeslots')
         
         if target_user:
             try:
@@ -2345,13 +2373,14 @@ def timeslots_view(request):
                     target_user.booking_weekdays = ''
                 
                 target_user.save(update_fields=['booking_advance_days', 'booking_start_time', 'booking_end_time', 'booking_weekdays'])
-                messages.success(request, '✓ Auto-generation settings updated successfully.')
+                messages.success(request, f'✓ Auto-generation settings updated successfully for {target_user.get_full_name()}.')
                 
             except (ValueError, User.DoesNotExist) as e:
                 messages.error(request, f'Error updating settings: {str(e)}')
+        
+        return redirect('timeslots')
     
-    # Rest of existing code...
-    # Handle bulk delete (POST request)
+    # Handle bulk delete (existing code)
     if request.method == 'POST' and is_admin:
         bulk_action = request.POST.get('bulk_action')
         if bulk_action == 'delete':
@@ -2405,7 +2434,8 @@ def timeslots_view(request):
     if is_admin:
         salesmen = User.objects.filter(is_active_salesman=True, is_active=True).order_by('first_name', 'last_name')
 
-    # Get settings for the current viewed salesman
+    # Get settings for the current viewed/selected salesman
+    current_salesman = None
     booking_advance_days = None
     booking_start_time = None
     booking_end_time = None
@@ -2413,21 +2443,23 @@ def timeslots_view(request):
     
     if is_admin and selected_salesman_id:
         try:
-            salesman = User.objects.get(id=selected_salesman_id, is_active_salesman=True)
-            booking_advance_days = salesman.booking_advance_days
-            booking_start_time = salesman.booking_start_time
-            booking_end_time = salesman.booking_end_time
-            booking_weekdays_selected = salesman.booking_weekdays.split(',') if salesman.booking_weekdays else []
+            current_salesman = User.objects.get(id=selected_salesman_id, is_active_salesman=True)
+            booking_advance_days = current_salesman.booking_advance_days
+            booking_start_time = current_salesman.booking_start_time
+            booking_end_time = current_salesman.booking_end_time
+            booking_weekdays_selected = current_salesman.booking_weekdays.split(',') if current_salesman.booking_weekdays else []
         except User.DoesNotExist:
-            booking_advance_days = request.user.booking_advance_days
-            booking_start_time = request.user.booking_start_time
-            booking_end_time = request.user.booking_end_time
-            booking_weekdays_selected = request.user.booking_weekdays.split(',') if request.user.booking_weekdays else []
+            pass
     elif not is_admin:
+        current_salesman = request.user
         booking_advance_days = request.user.booking_advance_days
         booking_start_time = request.user.booking_start_time
         booking_end_time = request.user.booking_end_time
         booking_weekdays_selected = request.user.booking_weekdays.split(',') if request.user.booking_weekdays else []
+
+    # Get system config for meeting type settings
+    from .models import SystemConfig
+    config = SystemConfig.get_config()
 
     weekday_choices = [
         ('0', 'Monday'),
@@ -2446,6 +2478,7 @@ def timeslots_view(request):
         'selected_day': selected_day,
         'selected_type': appointment_type,
         'selected_salesman': selected_salesman_id,
+        'current_salesman': current_salesman,  # NEW: Current salesman being managed
         'salesmen': salesmen,
         'is_admin': is_admin,
         'booking_advance_days': booking_advance_days,
@@ -2453,6 +2486,7 @@ def timeslots_view(request):
         'booking_end_time': booking_end_time,
         'booking_weekdays_selected': booking_weekdays_selected,
         'weekday_choices': weekday_choices,
+        'config': config,  # NEW: System config for meeting types
     }
     return render(request, 'timeslots.html', context)
 

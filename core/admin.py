@@ -17,7 +17,7 @@ class ClientAdmin(admin.ModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ['client', 'salesman', 'appointment_date', 'appointment_time', 
+    list_display = ['created_at', 'client', 'salesman', 'appointment_date', 'appointment_time', 
                     'appointment_type', 'status', 'commission_amount']
     list_filter = ['status', 'appointment_type', 'appointment_date', 'is_locked']
     search_fields = ['client__first_name', 'client__last_name', 'salesman__first_name', 

@@ -1734,7 +1734,7 @@ def payroll_finalize(request, pk):
     bookings = Booking.objects.filter(
         created_at__date__gte=payroll_period.start_date,
         created_at__date__lte=payroll_period.end_date,
-        status__in=['confirmed', 'completed']
+        status__in=['confirmed', 'completed', 'no_show']
     )
     
     total_commission = sum(b.commission_amount for b in bookings)

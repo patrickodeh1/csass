@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from decouple import config
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -207,3 +208,33 @@ LOGGING = {
     },
 }
 
+
+# Celery Beat Schedule - MUST be at the end of settings.py
+CELERY_BEAT_SCHEDULE = {
+    # Generate timeslots at midnight EST every day
+    'generate-daily-timeslots-midnight': {
+        'task': 'core.tasks.generate_daily_timeslots',
+        'schedule': crontab(hour=0, minute=0),  # Midnight EST
+        'options': {
+            'expires': 3600,  # Task expires after 1 hour
+        },
+    },
+    
+    # Cleanup past slots at 1 AM EST every day
+    'cleanup-past-slots-daily': {
+        'task': 'core.tasks.cleanup_past_slots_task',
+        'schedule': crontab(hour=1, minute=0),  # 1 AM EST
+        'options': {
+            'expires': 3600,
+        },
+    },
+    
+    # Cleanup old slots (2+ weeks) every Sunday at 2 AM EST
+    'cleanup-old-slots-weekly': {
+        'task': 'core.tasks.cleanup_old_slots_async',
+        'schedule': crontab(hour=2, minute=0, day_of_week=0),  # Sunday 2 AM
+        'options': {
+            'expires': 7200,
+        },
+    },
+}

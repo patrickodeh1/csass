@@ -44,6 +44,7 @@ urlpatterns = [
     path('salesman/bookings/<int:pk>/decline/', views.salesman_booking_decline, name='salesman_booking_decline'),
     # Live Transfer
     path('live-transfer/new/', views.live_transfer_create, name='live_transfer_create'),
+    path('live-transfer/<int:booking_id>/edit/', views.live_transfer_edit, name='live_transfer_edit'),
     
     # Timeslot Management from Calendar
     path('timeslot/<int:slot_id>/delete-from-calendar/', views.timeslot_delete_from_calendar, name='timeslot_delete_from_calendar'),

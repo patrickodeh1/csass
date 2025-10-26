@@ -8,14 +8,14 @@
             <div class="card shadow-lg border-0">
                 <div class="card-header text-white" style="background: linear-gradient(135deg, #1E572E 0%, #70C074 100%);">
                     <h3 class="mb-0 fw-bold">
-                        <i class="bi bi-telephone-forward"></i> Create Live Transfer Booking
+                        <i class="bi bi-telephone-forward"></i> Claim Live Transfer Booking
                     </h3>
                 </div>
                 <div class="card-body p-4">
                     <div class="alert alert-info border-0 mb-4">
                         <i class="bi bi-info-circle"></i> 
                         <strong>Live Transfer:</strong> Quick booking for immediate phone transfers. 
-                        Only name and phone number required.
+                        All fields marked with <span class="text-danger">*</span> are required.
                     </div>
                     
                     <div class="alert alert-warning border-0 mb-4">
@@ -27,27 +27,34 @@
                     <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
                         
-                        <div class="mb-3">
-                            <label for="{{ form.client_first_name.id_for_label }}" class="form-label fw-semibold">
-                                First Name <span class="text-danger">*</span>
-                            </label>
-                            {{ form.client_first_name }}
-                            {% if form.client_first_name.errors %}
-                                <div class="text-danger small mt-1">{{ form.client_first_name.errors }}</div>
-                            {% endif %}
+                        <!-- Client Information -->
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="bi bi-person"></i> Client Information
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.client_first_name.id_for_label }}" class="form-label fw-semibold">
+                                    First Name <span class="text-danger">*</span>
+                                </label>
+                                {{ form.client_first_name }}
+                                {% if form.client_first_name.errors %}
+                                    <div class="text-danger small mt-1">{{ form.client_first_name.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.client_last_name.id_for_label }}" class="form-label fw-semibold">
+                                    Last Name <span class="text-muted">(Optional)</span>
+                                </label>
+                                {{ form.client_last_name }}
+                                {% if form.client_last_name.errors %}
+                                    <div class="text-danger small mt-1">{{ form.client_last_name.errors }}</div>
+                                {% endif %}
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="{{ form.client_last_name.id_for_label }}" class="form-label fw-semibold">
-                                Last Name <span class="text-muted">(Optional)</span>
-                            </label>
-                            {{ form.client_last_name }}
-                            {% if form.client_last_name.errors %}
-                                <div class="text-danger small mt-1">{{ form.client_last_name.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label for="{{ form.client_phone.id_for_label }}" class="form-label fw-semibold">
                                 Phone Number <span class="text-danger">*</span>
                             </label>
@@ -56,6 +63,56 @@
                                 <div class="text-danger small mt-1">{{ form.client_phone.errors }}</div>
                             {% endif %}
                         </div>
+
+                        <!-- Property/Resort Information -->
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">
+                            <i class="bi bi-building"></i> Property Information
+                        </h5>
+
+                        <div class="mb-3">
+                            <label for="{{ form.resort.id_for_label }}" class="form-label fw-semibold">
+                                Resort Name <span class="text-danger">*</span>
+                            </label>
+                            {{ form.resort }}
+                            {% if form.resort.errors %}
+                                <div class="text-danger small mt-1">{{ form.resort.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.maintenance_fees.id_for_label }}" class="form-label fw-semibold">
+                                    Annual Maintenance Fees <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.maintenance_fees }}
+                                </div>
+                                {% if form.maintenance_fees.errors %}
+                                    <div class="text-danger small mt-1">{{ form.maintenance_fees.errors }}</div>
+                                {% endif %}
+                                <small class="text-muted">Enter the annual maintenance fee amount</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.mortgage_balance.id_for_label }}" class="form-label fw-semibold">
+                                    Mortgage Balance <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.mortgage_balance }}
+                                </div>
+                                {% if form.mortgage_balance.errors %}
+                                    <div class="text-danger small mt-1">{{ form.mortgage_balance.errors }}</div>
+                                {% endif %}
+                                <small class="text-muted">Enter the current mortgage balance</small>
+                            </div>
+                        </div>
+
+                        <!-- Additional Notes -->
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">
+                            <i class="bi bi-chat-left-text"></i> Additional Information
+                        </h5>
 
                         <div class="mb-4">
                             <label for="{{ form.notes.id_for_label }}" class="form-label fw-semibold">

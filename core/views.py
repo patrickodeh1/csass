@@ -3495,6 +3495,66 @@ def live_transfer_create(request):
         'title': 'Create Live Transfer Booking'
     })
 
+@login_required
+def live_transfer_edit(request, booking_id):
+    """Edit an existing live transfer booking"""
+    booking = get_object_or_404(Booking, id=booking_id)
+    
+    # Verify this is actually a live transfer
+    if booking.appointment_type != 'live_transfer':
+        messages.error(request, 'This booking is not a live transfer.')
+        return redirect('booking_detail', booking_id=booking.id)
+    
+    # Check permissions - only admin or the agent who created it can edit
+    if not (request.user.is_staff or booking.created_by == request.user):
+        messages.error(request, 'You do not have permission to edit this booking.')
+        return redirect('booking_detail', booking_id=booking.id)
+    
+    # Check if booking is locked (payroll finalized)
+    if booking.is_locked:
+        messages.error(request, 'This booking is locked and cannot be edited (payroll finalized).')
+        return redirect('booking_detail', booking_id=booking.id)
+    
+    if request.method == 'POST':
+        form = LiveTransferForm(request.POST)
+        if form.is_valid():
+            # Update existing booking with form data
+            booking.client.first_name = form.cleaned_data['client_first_name']
+            booking.client.last_name = form.cleaned_data.get('client_last_name', '')
+            booking.client.phone_number = form.cleaned_data['client_phone']
+            booking.client.save()
+            
+            # Update live transfer specific fields
+            booking.resort = form.cleaned_data['resort']
+            booking.maintenance_fees = form.cleaned_data['maintenance_fees']
+            booking.mortgage_balance = form.cleaned_data['mortgage_balance']
+            booking.notes = form.cleaned_data.get('notes', '')
+            
+            # Track who updated it
+            booking.updated_by = request.user
+            booking.save()
+            
+            messages.success(request, 'Live transfer updated successfully!')
+            return redirect('booking_detail', booking_id=booking.id)
+    else:
+        # Pre-fill form with existing data
+        initial_data = {
+            'client_first_name': booking.client.first_name,
+            'client_last_name': booking.client.last_name,
+            'client_phone': booking.client.phone_number,
+            'resort': booking.resort,
+            'maintenance_fees': booking.maintenance_fees,
+            'mortgage_balance': booking.mortgage_balance,
+            'notes': booking.notes,
+        }
+        form = LiveTransferForm(initial=initial_data)
+    
+    context = {
+        'form': form,
+        'booking': booking,
+        'is_edit': True,
+    }
+    return render(request, 'live_transfer_form.html', context)
 
 @login_required
 @admin_required

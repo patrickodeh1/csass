@@ -258,7 +258,9 @@ class Booking(models.Model):
     meeting_address = models.CharField(max_length=255, blank=True)
     zoom_link = models.URLField(blank=True)
     location = models.CharField(max_length=255, blank=True, help_text="State or City of salesman for in-person appointments")
-
+    resort = models.CharField(max_length=255, blank=True)
+    maintenance_fees = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    mortgage_balance = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     notes = models.TextField(blank=True)
     commission_amount = models.DecimalField(max_digits=10, decimal_places=2)
     audio_file = models.FileField(

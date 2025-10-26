@@ -14,89 +14,154 @@
                     </span>
                 </div>
                 <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-3">Client Information</h6>
-                            <p class="mb-2"><strong>Business Name:</strong> {{ booking.client.business_name }}</p>
-                            <p class="mb-2"><strong>Name:</strong> {{ booking.client.first_name }} {{ booking.client.last_name }}</p>
-                            <p class="mb-2"><strong>Email:</strong> {{ booking.client.email }}</p>
-                            <p class="mb-2"><strong>Phone:</strong> {{ booking.client.phone_number }}</p>
+                    <!-- LIVE TRANSFER BOOKING LAYOUT -->
+                    {% if booking.appointment_type == 'live_transfer' %}
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3"><i class="bi bi-person"></i> Client Information</h6>
+                                <p class="mb-2"><strong>Name:</strong> {{ booking.client.first_name }} {{ booking.client.last_name }}</p>
+                                <p class="mb-2"><strong>Phone:</strong> {{ booking.client.phone_number }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3"><i class="bi bi-building"></i> Property Information</h6>
+                                <p class="mb-2"><strong>Resort Name:</strong> {{ booking.resort|default:"N/A" }}</p>
+                                <p class="mb-2"><strong>Annual Maintenance Fees:</strong> ${{ booking.maintenance_fees|floatformat:2|default:"0.00" }}</p>
+                                <p class="mb-2"><strong>Mortgage Balance:</strong> ${{ booking.mortgage_balance|floatformat:2|default:"0.00" }}</p>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-3">Appointment Details</h6>
-                            <p class="mb-2"><strong>Date:</strong> {{ booking.appointment_date|date:"l, F d, Y" }}</p>
-                            <p class="mb-2"><strong>Time:</strong> {{ booking.appointment_time|date:"g:i A" }}</p>
-                            <p class="mb-2"><strong>Duration:</strong> {{ booking.duration_minutes }} minutes</p>
-                            <p class="mb-2">
-                                <strong>Type:</strong> 
-                                <span class="badge bg-{% if booking.appointment_type == 'zoom' %}primary{% else %}warning{% endif %}">
-                                    {{ booking.get_appointment_type_display }}
-                                </span>
-                            </p>
-                            
-                            {% if booking.zoom_link %}
-                            <p class="mb-2">
-                                <strong>Zoom Link:</strong> 
-                                <a href="{{ booking.zoom_link }}" target="_blank">{{ booking.zoom_link }}</a>
-                            </p>
-                            {% endif %}
 
-                            {% if booking.meeting_address %}
-                            <p class="mb-2">
-                                <strong>Meeting Address:</strong> 
-                                {{ booking.meeting_address }}
-                            </p>
-                            {% endif %}
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3"><i class="bi bi-telephone"></i> Transfer Details</h6>
+                                <p class="mb-2">
+                                    <strong>Type:</strong> 
+                                    <span class="badge bg-info">Live Transfer</span>
+                                </p>
+                                <p class="mb-2"><strong>Date:</strong> {{ booking.appointment_date|date:"l, F d, Y" }}</p>
+                                <p class="mb-2"><strong>Time:</strong> {{ booking.appointment_time|date:"g:i A" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3"><i class="bi bi-info-circle"></i> Booking Information</h6>
+                                <p class="mb-2"><strong>Agent:</strong> {{ booking.salesman.get_full_name }}</p>
+                                <p class="mb-2"><strong>Created:</strong> {{ booking.created_at|date:"M d, Y g:i A" }}</p>
+                                <p class="mb-2"><strong>Commission:</strong> ${{ booking.commission_amount }}</p>
+                                
+                                {% if booking.approved_by %}
+                                <p class="mb-2">
+                                    <strong>Approved By:</strong> {{ booking.approved_by.get_full_name }}<br>
+                                    <small class="text-muted">{{ booking.approved_at|date:"M d, Y g:i A" }}</small>
+                                </p>
+                                {% endif %}
+
+                                {% if booking.declined_by %}
+                                <p class="mb-2">
+                                    <strong>Declined By:</strong> {{ booking.declined_by.get_full_name }}<br>
+                                    <small class="text-muted">{{ booking.declined_at|date:"M d, Y g:i A" }}</small>
+                                </p>
+                                {% if booking.decline_reason %}
+                                <p class="mb-2">
+                                    <strong>Decline Reason:</strong> {{ booking.get_decline_reason_display }}
+                                </p>
+                                {% endif %}
+                                {% endif %}
+
+                                {% if booking.is_locked %}
+                                <p class="mb-2">
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-lock-fill"></i> Locked (Payroll Finalized)
+                                    </span>
+                                </p>
+                                {% endif %}
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-3">Salesman</h6>
-                            <p class="mb-2"><strong>Name:</strong> {{ booking.salesman.get_full_name }}</p>
-                            <p class="mb-2"><strong>Email:</strong> {{ booking.salesman.email }}</p>
-                            {% if booking.location %}
-                            <p class="mb-2">
-                                <strong>State / City:</strong> 
-                                {{ booking.location }}
-                            </p>
-                            {% endif %}
+                    <!-- REGULAR APPOINTMENT LAYOUT (ZOOM/IN-PERSON) -->
+                    {% else %}
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Client Information</h6>
+                                <p class="mb-2"><strong>Business Name:</strong> {{ booking.client.business_name }}</p>
+                                <p class="mb-2"><strong>Name:</strong> {{ booking.client.first_name }} {{ booking.client.last_name }}</p>
+                                <p class="mb-2"><strong>Email:</strong> {{ booking.client.email }}</p>
+                                <p class="mb-2"><strong>Phone:</strong> {{ booking.client.phone_number }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Appointment Details</h6>
+                                <p class="mb-2"><strong>Date:</strong> {{ booking.appointment_date|date:"l, F d, Y" }}</p>
+                                <p class="mb-2"><strong>Time:</strong> {{ booking.appointment_time|date:"g:i A" }}</p>
+                                <p class="mb-2"><strong>Duration:</strong> {{ booking.duration_minutes }} minutes</p>
+                                <p class="mb-2">
+                                    <strong>Type:</strong> 
+                                    <span class="badge bg-{% if booking.appointment_type == 'zoom' %}primary{% else %}warning{% endif %}">
+                                        {{ booking.get_appointment_type_display }}
+                                    </span>
+                                </p>
+                                
+                                {% if booking.zoom_link %}
+                                <p class="mb-2">
+                                    <strong>Zoom Link:</strong> 
+                                    <a href="{{ booking.zoom_link }}" target="_blank">{{ booking.zoom_link }}</a>
+                                </p>
+                                {% endif %}
+
+                                {% if booking.meeting_address %}
+                                <p class="mb-2">
+                                    <strong>Meeting Address:</strong> 
+                                    {{ booking.meeting_address }}
+                                </p>
+                                {% endif %}
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-3">Booking Information</h6>
-                            <p class="mb-2"><strong>Created By:</strong> {{ booking.created_by.get_full_name }}</p>
-                            <p class="mb-2"><strong>Created At:</strong> {{ booking.created_at|date:"M d, Y g:i A" }}</p>
-                            <p class="mb-2"><strong>Commission:</strong> ${{ booking.commission_amount }}</p>
 
-                            {% if booking.approved_by %}
-                            <p class="mb-2">
-                                <strong>Approved By:</strong> {{ booking.approved_by.get_full_name }}<br>
-                                <small class="text-muted">{{ booking.approved_at|date:"M d, Y g:i A" }}</small>
-                            </p>
-                            {% endif %}
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Salesman</h6>
+                                <p class="mb-2"><strong>Name:</strong> {{ booking.salesman.get_full_name }}</p>
+                                <p class="mb-2"><strong>Email:</strong> {{ booking.salesman.email }}</p>
+                                {% if booking.location %}
+                                <p class="mb-2">
+                                    <strong>State / City:</strong> 
+                                    {{ booking.location }}
+                                </p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Booking Information</h6>
+                                <p class="mb-2"><strong>Created By:</strong> {{ booking.created_by.get_full_name }}</p>
+                                <p class="mb-2"><strong>Created At:</strong> {{ booking.created_at|date:"M d, Y g:i A" }}</p>
+                                <p class="mb-2"><strong>Commission:</strong> ${{ booking.commission_amount }}</p>
 
-                            {% if booking.declined_by %}
-                            <p class="mb-2">
-                                <strong>Declined By:</strong> {{ booking.declined_by.get_full_name }}<br>
-                                <small class="text-muted">{{ booking.declined_at|date:"M d, Y g:i A" }}</small>
-                            </p>
-                            {% if booking.decline_reason %}
-                            <p class="mb-2">
-                                <strong>Decline Reason:</strong> {{ booking.get_decline_reason_display }}
-                            </p>
-                            {% endif %}
-                            {% endif %}
+                                {% if booking.approved_by %}
+                                <p class="mb-2">
+                                    <strong>Approved By:</strong> {{ booking.approved_by.get_full_name }}<br>
+                                    <small class="text-muted">{{ booking.approved_at|date:"M d, Y g:i A" }}</small>
+                                </p>
+                                {% endif %}
 
-                            {% if booking.is_locked %}
-                            <p class="mb-2">
-                                <span class="badge bg-warning text-dark">
-                                    <i class="bi bi-lock-fill"></i> Locked (Payroll Finalized)
-                                </span>
-                            </p>
-                            {% endif %}
+                                {% if booking.declined_by %}
+                                <p class="mb-2">
+                                    <strong>Declined By:</strong> {{ booking.declined_by.get_full_name }}<br>
+                                    <small class="text-muted">{{ booking.declined_at|date:"M d, Y g:i A" }}</small>
+                                </p>
+                                {% if booking.decline_reason %}
+                                <p class="mb-2">
+                                    <strong>Decline Reason:</strong> {{ booking.get_decline_reason_display }}
+                                </p>
+                                {% endif %}
+                                {% endif %}
+
+                                {% if booking.is_locked %}
+                                <p class="mb-2">
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-lock-fill"></i> Locked (Payroll Finalized)
+                                    </span>
+                                </p>
+                                {% endif %}
+                            </div>
                         </div>
-                    </div>
+                    {% endif %}
 
+                    <!-- AUDIO SECTION (ALL BOOKING TYPES) -->
                     {% if request.user.is_staff %}
                     <div class="mb-4">
                         <h6 class="text-muted mb-2"><i class="bi bi-mic"></i> Audio Recording (Admin Only)</h6>
@@ -139,6 +204,7 @@
                     </div>
                     {% endif %}
 
+                    <!-- NOTES SECTION (ALL BOOKING TYPES) -->
                     {% if booking.notes %}
                     <div class="mb-4">
                         <h6 class="text-muted mb-2">Notes</h6>
@@ -146,6 +212,7 @@
                     </div>
                     {% endif %}
 
+                    <!-- CANCELLATION INFO (ALL BOOKING TYPES) -->
                     {% if booking.status == 'canceled' %}
                     <div class="alert alert-danger">
                         <h6><i class="bi bi-x-circle"></i> Cancellation Information</h6>
@@ -158,7 +225,7 @@
                     </div>
                     {% endif %}
 
-                    <!-- ACTION BUTTONS - SIMPLIFIED AND CONSOLIDATED -->
+                    <!-- ACTION BUTTONS -->
                     <div class="d-flex gap-2 justify-content-end flex-wrap">
                         <a href="{% url 'calendar' %}" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Back to Calendar
@@ -185,25 +252,33 @@
 
                             <!-- Edit booking (if editable) - Admin only -->
                             {% if booking.is_editable and request.user.is_staff %}
-                            <a href="{% url 'booking_edit' booking.id %}" class="btn btn-primary">
-                                <i class="bi bi-pencil"></i> Edit
-                            </a>
+                                {% if booking.appointment_type == 'live_transfer' %}
+                                <a href="{% url 'live_transfer_edit' booking.id %}" class="btn btn-primary">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                {% else %}
+                                <a href="{% url 'booking_edit' booking.id %}" class="btn btn-primary">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                {% endif %}
                             {% endif %}
                         {% endif %}
 
-                        <!-- MARK ATTENDANCE (Admin and Assigned Salesman Only) -->
-                        {% if request.user.is_staff or booking.salesman == request.user %}
-                            {% if booking.status == 'confirmed' and booking.appointment_date <= today %}
-                            <a href="{% url 'booking_mark_attended' booking.id %}" 
-                               class="btn btn-success" 
-                               onclick="return confirm('Mark this appointment as ATTENDED? This will start a 21-day follow-up campaign.')">
-                                <i class="bi bi-check-circle"></i> Mark AD
-                            </a>
-                            <a href="{% url 'booking_mark_dna' booking.id %}" 
-                               class="btn btn-danger" 
-                               onclick="return confirm('Mark this appointment as DID NOT ATTEND (DNA)? This will start a 90-day re-engagement campaign.')">
-                                <i class="bi bi-x-circle"></i> Mark DNA
-                            </a>
+                        <!-- MARK ATTENDANCE (Admin and Assigned Salesman Only) - NOT FOR LIVE TRANSFER -->
+                        {% if booking.appointment_type != 'live_transfer' %}
+                            {% if request.user.is_staff or booking.salesman == request.user %}
+                                {% if booking.status == 'confirmed' and booking.appointment_date <= today %}
+                                <a href="{% url 'booking_mark_attended' booking.id %}" 
+                                   class="btn btn-success" 
+                                   onclick="return confirm('Mark this appointment as ATTENDED? This will start a 21-day follow-up campaign.')">
+                                    <i class="bi bi-check-circle"></i> Mark AD
+                                </a>
+                                <a href="{% url 'booking_mark_dna' booking.id %}" 
+                                   class="btn btn-danger" 
+                                   onclick="return confirm('Mark this appointment as DID NOT ATTEND (DNA)? This will start a 90-day re-engagement campaign.')">
+                                    <i class="bi bi-x-circle"></i> Mark DNA
+                                </a>
+                                {% endif %}
                             {% endif %}
                         {% endif %}
                     </div>

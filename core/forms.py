@@ -947,7 +947,7 @@ class AgentRegistrationForm(forms.ModelForm):
 
 
 class LiveTransferForm(forms.Form):
-    """Simplified form for live transfer bookings - only name and phone required"""
+    """Simplified form for live transfer bookings - name, phone + resort details required"""
     client_first_name = forms.CharField(
         max_length=100, 
         required=True,
@@ -966,11 +966,58 @@ class LiveTransferForm(forms.Form):
         label='Phone Number',
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter phone number'})
     )
+    
+    # LIVE TRANSFER SPECIFIC FIELDS (REQUIRED)
+    resort = forms.CharField(
+        max_length=255,
+        required=True,
+        label='Resort Name',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter resort name'})
+    )
+    maintenance_fees = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=True,
+        label='Annual Maintenance Fees',
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'Enter annual maintenance fees',
+            'step': '0.01',
+            'min': '0'
+        })
+    )
+    mortgage_balance = forms.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        required=True,
+        label='Mortgage Balance',
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'Enter current mortgage balance',
+            'step': '0.01',
+            'min': '0'
+        })
+    )
+    
     notes = forms.CharField(
         required=False,
-        label='Notes',
+        label='Additional Notes',
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Additional notes (optional)'})
     )
+    
+    def clean_maintenance_fees(self):
+        """Validate maintenance fees is positive"""
+        fees = self.cleaned_data.get('maintenance_fees')
+        if fees is not None and fees < 0:
+            raise forms.ValidationError("Maintenance fees cannot be negative.")
+        return fees
+    
+    def clean_mortgage_balance(self):
+        """Validate mortgage balance is not negative"""
+        balance = self.cleaned_data.get('mortgage_balance')
+        if balance is not None and balance < 0:
+            raise forms.ValidationError("Mortgage balance cannot be negative.")
+        return balance
     
     def save(self, created_by):
         """Create a live transfer booking - PENDING STATUS (requires admin approval)"""
@@ -1002,6 +1049,10 @@ class LiveTransferForm(forms.Form):
             appointment_type='live_transfer',
             status='pending',  # CHANGED: Live transfers need admin approval
             notes=self.cleaned_data.get('notes', ''),
+            # LIVE TRANSFER SPECIFIC FIELDS
+            resort=self.cleaned_data['resort'],
+            maintenance_fees=self.cleaned_data['maintenance_fees'],
+            mortgage_balance=self.cleaned_data['mortgage_balance'],
             commission_amount=Decimal('30.00'),  # Fixed $30 commission
             created_by=created_by
         )

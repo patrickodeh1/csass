@@ -28,6 +28,12 @@ class UserForm(forms.ModelForm):
         required=False, 
         widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
     )
+    company = forms.CharField(
+        max_length=200, 
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        help_text='Company name (required for salesmen)'
+    )
     paypal_email = forms.EmailField(required=False, widget=forms.EmailInput(attrs={'class': 'form-control'}))
     bitcoin_wallet_address = forms.CharField(
         max_length=255, 
@@ -82,7 +88,7 @@ class UserForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'phone_number',
-                  'commission_rate', 'is_active_salesman', 'hire_date', 'is_active']
+                  'company', 'commission_rate', 'is_active_salesman', 'hire_date', 'is_active']
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -124,6 +130,13 @@ class UserForm(forms.ModelForm):
         cleaned_data = super().clean()
         password = cleaned_data.get('password')
         password_confirm = cleaned_data.get('password_confirm')
+        is_active_salesman = cleaned_data.get('is_active_salesman')
+        company = cleaned_data.get('company')
+        
+        # Make company required for salesmen
+        if is_active_salesman and not company:
+            self.add_error('company', 'Company is required for salesman accounts.')
+        
         
         if password and password_confirm:
             if password != password_confirm:

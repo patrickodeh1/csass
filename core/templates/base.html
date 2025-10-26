@@ -86,7 +86,7 @@
                     <li class="nav-item">
                         <a class="nav-link text-white {% if request.resolver_match.url_name == 'calendar' %}active fw-semibold{% endif %}" 
                            href="{% url 'calendar' %}">
-                            <i class="bi bi-calendar3"></i> Calendar
+                            <i class="bi bi-calendar3"></i> Tracking
                         </a>
                     </li>
                     {% if user|has_group:'remote_agent' %}

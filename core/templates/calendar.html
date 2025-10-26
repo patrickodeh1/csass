@@ -25,7 +25,7 @@
                     </div>
                     <div class="col-md-4 text-end">
                         <a href="{% url 'live_transfer_create' %}" class="btn btn-light btn-lg">
-                            <i class="bi bi-telephone-forward"></i> Create Live Transfer
+                            <i class="bi bi-telephone-forward"></i> Claim Live Transfer
                         </a>
                     </div>
                 </div>
@@ -48,7 +48,7 @@
                     </div>
                     <div class="col-md-4 text-end">
                         <a href="{% url 'live_transfer_create' %}" class="btn btn-light btn-lg">
-                            <i class="bi bi-telephone-forward"></i> Create Live Transfer
+                            <i class="bi bi-telephone-forward"></i> Claim Live Transfer
                         </a>
                     </div>
                 </div>
@@ -104,6 +104,7 @@
                         {{ start_date|date:"F Y" }}
                         {% if view_mode == 'week' %} - Week of {{ start_date|date:"M d" }}{% endif %}
                         {% if view_mode == 'day' %} - {{ current_date|date:"l, F d, Y" }}{% endif %}
+                        Appointment Booking
                     </h5>
                 </div>
                 <div class="col-auto">

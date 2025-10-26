@@ -2114,13 +2114,6 @@ def settings_view(request):
                 config.updated_by = request.user
                 config.save()
                 
-                if config.autogeneration_enabled:
-                    from .utils import generate_timeslots_for_cycle
-                    generate_timeslots_for_cycle()
-                    messages.success(request, 'General settings updated and timeslots generated successfully!')
-                else:
-                    messages.success(request, 'General settings updated successfully!')
-                return redirect('settings')
             else:
                 # Form has errors - will be displayed in template
                 messages.error(request, 'Please correct the errors below.')

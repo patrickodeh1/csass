@@ -41,7 +41,7 @@ import logging
 from datetime import datetime, date, time, timedelta 
 from .models import MessageTemplate, DripCampaign, ScheduledMessage, CommunicationLog
 from .decorators import admin_required
-from .forms import MessageTemplateForm, MessageTemplateCSVUploadForm
+from .forms import MessageTemplateForm, MessageTemplateCSVUploadForm, LiveTransferForm
 from .utils import start_drip_campaign
 import os
 from django.db import IntegrityError
@@ -323,9 +323,7 @@ def calendar_view(request):
     if is_salesman and not is_admin:
         # Salesmen see only their own bookings
         bookings = bookings.filter(salesman=request.user)
-    elif is_remote_agent and not is_admin:
-        # Remote agents see only bookings they created
-        bookings = bookings.filter(created_by=request.user)
+    
     elif salesman_id and is_admin:
         # Admins can filter by salesman_id
         bookings = bookings.filter(salesman_id=salesman_id)
@@ -2493,10 +2491,9 @@ def timeslots_view(request):
 # ============================================================
 # NEW: Day Detail View for Calendar
 # ============================================================
-
 @login_required
 def calendar_day_detail(request, date_str):
-    """Show all slots and bookings for a specific day"""
+    """Show all slots and bookings for a specific day - UPDATED FOR AGENTS"""
     try:
         selected_date = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
@@ -2522,7 +2519,7 @@ def calendar_day_detail(request, date_str):
     elif salesman_id and is_admin:
         slots = slots.filter(salesman_id=salesman_id)
     
-    if appointment_type:
+    if appointment_type and appointment_type != 'live_transfer':
         slots = slots.filter(appointment_type=appointment_type)
     
     slots = slots.order_by('start_time', 'salesman')
@@ -2532,13 +2529,13 @@ def calendar_day_detail(request, date_str):
         appointment_date=selected_date
     ).select_related('client', 'salesman', 'created_by')
     
-    # Filter bookings by user role
+    # CRITICAL CHANGE: Remote agents now see ALL bookings (not just their own)
+    # This allows them to see where appointments already exist
     if is_salesman and not is_admin:
         bookings = bookings.filter(salesman=request.user)
-    elif is_remote_agent and not is_admin:
-        bookings = bookings.filter(created_by=request.user)
     elif salesman_id and is_admin:
         bookings = bookings.filter(salesman_id=salesman_id)
+    # Removed: elif is_remote_agent and not is_admin: bookings = bookings.filter(created_by=request.user)
     
     if appointment_type:
         bookings = bookings.filter(appointment_type=appointment_type)
@@ -2573,9 +2570,6 @@ def calendar_day_detail(request, date_str):
     }
     
     return render(request, 'calendar_day_detail.html', context)
-
-
-
 
 @login_required
 @group_required('salesman', 'admin')
@@ -3483,3 +3477,42 @@ def user_delete(request, pk):
     }
     
     return render(request, 'user_delete.html', context)
+
+
+@login_required
+@group_required('remote_agent')
+def live_transfer_create(request):
+    """Create a live transfer booking - remote agents only - REQUIRES ADMIN APPROVAL"""
+    if request.method == 'POST':
+        form = LiveTransferForm(request.POST)
+        if form.is_valid():
+            booking = form.save(created_by=request.user)
+            messages.warning(
+                request, 
+                f'✓ Live Transfer booking submitted successfully! '
+                f'Client: {booking.client.get_full_name()}, Potential Commission: ${booking.commission_amount}. '
+                f'⚠️ Status: PENDING ADMIN APPROVAL. You will receive commission once approved.'
+            )
+            return redirect('calendar')
+    else:
+        form = LiveTransferForm()
+    
+    return render(request, 'live_transfer_form.html', {
+        'form': form,
+        'title': 'Create Live Transfer Booking'
+    })
+
+
+@login_required
+@admin_required
+def timeslot_delete_from_calendar(request, slot_id):
+    """Delete a timeslot directly from calendar day detail - Admin only"""
+    slot = get_object_or_404(AvailableTimeSlot, pk=slot_id)
+    
+    if request.method == 'POST':
+        date = slot.date
+        slot.delete()
+        messages.success(request, f'✓ Time slot deleted successfully.')
+        return redirect('calendar_day_detail', date_str=date.strftime('%Y-%m-%d'))
+    
+    return render(request, 'timeslot_quick_delete.html', {'slot': slot})

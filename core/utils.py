@@ -95,32 +95,38 @@ def get_payroll_periods(weeks=3):
 
 def delete_subsequent_timeslots(booking):
     """
-    CRITICAL NEW FUNCTION: Delete 3 subsequent timeslots after a booking (1.5 hours buffer).
-    Deletes BOTH zoom and in_person slots for the 1.5 hour window.
+    CRITICAL: Delete/deactivate 4 timeslots (including booked slot + next 3) = 2 hours total buffer.
+    This ensures 1.5 hours AFTER the booking completes (30min booking + 1.5hr buffer = 2hr total).
+    Deactivates BOTH zoom and in_person slots for the 2-hour window.
     
-    Example: Booking at 9:00 AM → Delete 9:30, 10:00, 10:30 (both types)
+    Example: Booking at 9:00 AM → Deactivate 9:00, 9:30, 10:00, 10:30 (both types)
     
     Args:
         booking: Booking instance
+    
+    Returns:
+        int: Number of slots deactivated
     """
     from datetime import datetime, timedelta
     
-    # Calculate the 3 subsequent time slots (30-minute intervals)
+    # Calculate the booked slot + 3 subsequent time slots (30-minute intervals)
     base_time = datetime.combine(booking.appointment_date, booking.appointment_time)
     
-    slots_to_delete = []
-    for i in range(1, 4):  # Next 3 slots (9:30, 10:00, 10:30)
+    slots_to_deactivate = [booking.appointment_time]  # Include the booked time
+    for i in range(1, 4):  # Next 3 slots (9:30, 10:00, 10:30 if booking at 9:00)
         slot_time = (base_time + timedelta(minutes=30 * i)).time()
-        slots_to_delete.append(slot_time)
+        slots_to_deactivate.append(slot_time)
     
-    # Delete BOTH zoom and in_person slots for this salesman on this date
-    deleted_count = AvailableTimeSlot.objects.filter(
+    # Deactivate BOTH zoom and in_person slots for this salesman on this date
+    # Use update() instead of delete() to preserve data
+    deactivated_count = AvailableTimeSlot.objects.filter(
         salesman=booking.salesman,
         date=booking.appointment_date,
-        start_time__in=slots_to_delete
-    ).delete()[0]
+        start_time__in=slots_to_deactivate,
+        is_active=True
+    ).update(is_active=False, is_booked=True)
     
-    return deleted_count
+    return deactivated_count
 
 def generate_timeslots_for_cycle(salesman=None):
     """
@@ -275,21 +281,67 @@ def cleanup_old_slots(weeks=2):
 
 
 def mark_past_slots_inactive():
-    """Auto-inactivate yesterday and older unbooked slots (keep data)."""
+    """
+    Auto-inactivate yesterday and older unbooked slots.
+    Runs automatically on calendar view load.
+    """
     today = timezone.now().date()
-    qs = AvailableTimeSlot.objects.filter(date__lt=today, is_active=True, is_booked=False)
+    qs = AvailableTimeSlot.objects.filter(
+        date__lt=today, 
+        is_active=True, 
+        is_booked=False
+    )
     updated = qs.update(is_active=False)
     return updated
 
 
 def mark_elapsed_today_slots_inactive():
-    """Auto-inactivate today's unbooked slots that have already elapsed."""
+    """
+    Auto-inactivate today's unbooked slots that have already elapsed.
+    Runs automatically on calendar view load.
+    """
     now = timezone.localtime()
     today = now.date()
-    qs = AvailableTimeSlot.objects.filter(date=today, start_time__lt=now.time(), is_active=True, is_booked=False)
+    current_time = now.time()
+    
+    qs = AvailableTimeSlot.objects.filter(
+        date=today, 
+        start_time__lt=current_time, 
+        is_active=True, 
+        is_booked=False
+    )
     updated = qs.update(is_active=False)
     return updated
 
+def cleanup_past_dates_slots():
+    """
+    Enhanced cleanup: Mark all past date slots as inactive.
+    Can be called from a daily cron job or management command.
+    
+    Returns:
+        int: Number of slots deactivated
+    """
+    today = timezone.now().date()
+    
+    # Deactivate all past slots (including today if time has passed)
+    past_slots = AvailableTimeSlot.objects.filter(
+        date__lt=today,
+        is_active=True
+    )
+    
+    count = past_slots.update(is_active=False)
+    
+    # Also deactivate elapsed today slots
+    now = timezone.localtime()
+    today_elapsed = AvailableTimeSlot.objects.filter(
+        date=today,
+        start_time__lt=now.time(),
+        is_active=True
+    )
+    
+    count += today_elapsed.update(is_active=False)
+    
+    return count
 
 def _get_twilio_client():
     """Create a Twilio client from environment variables only"""

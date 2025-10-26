@@ -45,6 +45,7 @@
                     <option value="">All Types</option>
                     <option value="zoom" {% if selected_type == 'zoom' %}selected{% endif %}>Zoom</option>
                     <option value="in_person" {% if selected_type == 'in_person' %}selected{% endif %}>In-Person</option>
+                    <option value="live_transfer" {% if selected_type == 'live_transfer' %}selected{% endif %}>Live Transfer</option>
                 </select>
             </div>
         </div>
@@ -63,10 +64,23 @@
                 <div class="card-body" style="max-height: 600px; overflow-y: auto;">
                     {% if available_slots %}
                         {% for slot in available_slots %}
-                        <div class="card mb-2 border-success hover-shadow" style="cursor: pointer; transition: all 0.3s;" 
-                             onclick="window.location.href='{% url 'booking_create' %}?date={{ slot.date|date:'Y-m-d' }}&start_time={{ slot.start_time|date:'H:i' }}&end_time={{ slot.start_time|date:'H:i' }}&salesman={{ slot.salesman.id }}&type={{ slot.appointment_type }}'"
+                        <div class="card mb-2 border-success hover-shadow position-relative" 
+                             style="cursor: pointer; transition: all 0.3s;" 
+                             onclick="window.location.href='{% url 'booking_create' %}?date={{ slot.date|date:'Y-m-d' }}&start_time={{ slot.start_time|date:'H:i' }}&salesman={{ slot.salesman.id }}&type={{ slot.appointment_type }}'"
                              onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';"
                              onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                            
+                            <!-- Admin Delete Button -->
+                            {% if is_admin %}
+                            <button type="button" 
+                                    class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2" 
+                                    style="z-index: 10; padding: 2px 6px;"
+                                    onclick="event.stopPropagation(); if(confirm('Delete this time slot?')) { window.location.href='{% url 'timeslot_delete_from_calendar' slot.id %}'; }"
+                                    title="Delete this slot">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            {% endif %}
+                            
                             <div class="card-body py-2 px-3">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
@@ -100,10 +114,8 @@
         </div>
         {% endif %}
 
-        <!-- Bookings Column - ADMIN and SALESMEN ONLY -->
-        <div class="{% if is_salesman %}col-md-12{% elif is_admin %}col-md-6{% else %}col-md-6{% endif %} mb-4">
-            {% if is_admin or is_salesman %}
-            
+        <!-- Bookings Column -->
+        <div class="{% if is_salesman %}col-md-12{% elif is_admin or is_remote_agent %}col-md-6{% endif %} mb-4">
             <!-- Pending Bookings -->
             {% if pending_bookings %}
             <div class="card shadow border-0 mb-3">
@@ -121,15 +133,23 @@
                             <div class="card-body py-2 px-3">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
-                                        <strong class="text-dark" style="font-size: 1.05rem;">{{ booking.appointment_time|time:"g:i A" }}</strong>
+                                        <strong class="text-dark" style="font-size: 1.05rem;">
+                                            {% if booking.appointment_type == 'live_transfer' %}
+                                                <i class="bi bi-telephone-forward"></i> Live Transfer
+                                            {% else %}
+                                                {{ booking.appointment_time|time:"g:i A" }}
+                                            {% endif %}
+                                        </strong>
                                         <br>
-                                        <small><i class="bi bi-briefcase"></i> {{ booking.client.business_name }}</small>
+                                        <small><i class="bi bi-person"></i> {{ booking.client.get_full_name }}</small>
                                         <br>
                                         <small class="text-muted"><i class="bi bi-person-badge"></i> {{ booking.salesman.get_full_name }}</small>
                                     </div>
-                                    <span class="badge bg-{% if booking.appointment_type == 'zoom' %}info{% else %}primary{% endif %}" style="font-size: 0.8rem;">
+                                    <span class="badge bg-{% if booking.appointment_type == 'zoom' %}info{% elif booking.appointment_type == 'live_transfer' %}purple{% else %}primary{% endif %}" style="font-size: 0.8rem;">
                                         {% if booking.appointment_type == 'zoom' %}
                                             <i class="bi bi-camera-video"></i> Zoom
+                                        {% elif booking.appointment_type == 'live_transfer' %}
+                                            <i class="bi bi-telephone-forward"></i> Live
                                         {% else %}
                                             <i class="bi bi-geo-alt"></i> In-Person
                                         {% endif %}
@@ -148,7 +168,7 @@
             <div class="card shadow border-0 mb-3">
                 <div class="card-header text-white" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                     <h5 class="mb-0 fw-semibold">
-                        <i class="bi bi-check-circle"></i>  Appointments ({{ confirmed_bookings|length }})
+                        <i class="bi bi-check-circle"></i> Confirmed Bookings ({{ confirmed_bookings|length }})
                     </h5>
                 </div>
                 <div class="card-body" style="max-height: 300px; overflow-y: auto;">
@@ -160,15 +180,23 @@
                             <div class="card-body py-2 px-3">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
-                                        <strong class="text-dark" style="font-size: 1.05rem;">{{ booking.appointment_time|time:"g:i A" }}</strong>
+                                        <strong class="text-dark" style="font-size: 1.05rem;">
+                                            {% if booking.appointment_type == 'live_transfer' %}
+                                                <i class="bi bi-telephone-forward"></i> Live Transfer
+                                            {% else %}
+                                                {{ booking.appointment_time|time:"g:i A" }}
+                                            {% endif %}
+                                        </strong>
                                         <br>
-                                        <small><i class="bi bi-briefcase"></i> {{ booking.client.business_name }}</small>
+                                        <small><i class="bi bi-person"></i> {{ booking.client.get_full_name }}</small>
                                         <br>
                                         <small class="text-muted"><i class="bi bi-person-badge"></i> {{ booking.salesman.get_full_name }}</small>
                                     </div>
-                                    <span class="badge bg-{% if booking.appointment_type == 'zoom' %}info{% else %}primary{% endif %}" style="font-size: 0.8rem;">
+                                    <span class="badge bg-{% if booking.appointment_type == 'zoom' %}info{% elif booking.appointment_type == 'live_transfer' %}purple{% else %}primary{% endif %}" style="font-size: 0.8rem;">
                                         {% if booking.appointment_type == 'zoom' %}
                                             <i class="bi bi-camera-video"></i> Zoom
+                                        {% elif booking.appointment_type == 'live_transfer' %}
+                                            <i class="bi bi-telephone-forward"></i> Live
                                         {% else %}
                                             <i class="bi bi-geo-alt"></i> In-Person
                                         {% endif %}
@@ -185,7 +213,7 @@
             <!-- Declined Bookings - ADMIN ONLY -->
             {% if declined_bookings and is_admin %}
             <div class="card shadow border-0 mb-3">
-                <div class="card-header text-white" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #7e11e4 0%, #4f07a1 100%);">
                     <h5 class="mb-0 fw-semibold">
                         <i class="bi bi-x-circle"></i> Declined Bookings ({{ declined_bookings|length }})
                     </h5>
@@ -199,15 +227,23 @@
                             <div class="card-body py-2 px-3">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
-                                        <strong class="text-dark" style="font-size: 1.05rem;">{{ booking.appointment_time|time:"g:i A" }}</strong>
+                                        <strong class="text-dark" style="font-size: 1.05rem;">
+                                            {% if booking.appointment_type == 'live_transfer' %}
+                                                <i class="bi bi-telephone-forward"></i> Live Transfer
+                                            {% else %}
+                                                {{ booking.appointment_time|time:"g:i A" }}
+                                            {% endif %}
+                                        </strong>
                                         <br>
-                                        <small><i class="bi bi-briefcase"></i> {{ booking.client.business_name }}</small>
+                                        <small><i class="bi bi-person"></i> {{ booking.client.get_full_name }}</small>
                                         <br>
                                         <small class="text-muted"><i class="bi bi-person-badge"></i> {{ booking.salesman.get_full_name }}</small>
                                     </div>
-                                    <span class="badge bg-{% if booking.appointment_type == 'zoom' %}info{% else %}primary{% endif %}" style="font-size: 0.8rem;">
+                                    <span class="badge bg-{% if booking.appointment_type == 'zoom' %}info{% elif booking.appointment_type == 'live_transfer' %}purple{% else %}primary{% endif %}" style="font-size: 0.8rem;">
                                         {% if booking.appointment_type == 'zoom' %}
                                             <i class="bi bi-camera-video"></i> Zoom
+                                        {% elif booking.appointment_type == 'live_transfer' %}
+                                            <i class="bi bi-telephone-forward"></i> Live
                                         {% else %}
                                             <i class="bi bi-geo-alt"></i> In-Person
                                         {% endif %}
@@ -233,17 +269,6 @@
                 </div>
             </div>
             {% endif %}
-            
-            {% else %}
-            <!-- Remote agents should not see bookings -->
-            <div class="card shadow border-0">
-                <div class="card-body text-center text-muted py-5">
-                    <i class="bi bi-info-circle" style="font-size: 3rem; opacity: 0.5;"></i>
-                    <p class="mt-3 fw-semibold">You can view available slots to create new bookings</p>
-                    <small class="text-muted">Bookings are visible to salesmen and administrators only</small>
-                </div>
-            </div>
-            {% endif %}
         </div>
     </div>
 
@@ -255,15 +280,14 @@
                 {% if is_admin or is_remote_agent %}
                 <span class="badge bg-success" style="padding: 6px 12px;"><i class="bi bi-plus-circle"></i> Available Slot</span>
                 {% endif %}
-                {% if is_admin or is_salesman %}
                 <span class="badge bg-warning text-dark" style="padding: 6px 12px;"><i class="bi bi-hourglass-split"></i> Pending</span>
                 <span class="badge bg-primary" style="padding: 6px 12px;"><i class="bi bi-check-circle"></i> Confirmed</span>
-                {% endif %}
                 {% if is_admin %}
                 <span class="badge bg-danger" style="padding: 6px 12px;"><i class="bi bi-x-circle"></i> Declined</span>
                 {% endif %}
                 <span class="badge bg-info" style="padding: 6px 12px;"><i class="bi bi-camera-video"></i> Zoom</span>
                 <span class="badge bg-primary" style="padding: 6px 12px;"><i class="bi bi-geo-alt"></i> In-Person</span>
+                <span class="badge" style="padding: 6px 12px; background: #6f42c1; color: white;"><i class="bi bi-telephone-forward"></i> Live Transfer</span>
             </div>
         </div>
     </div>
@@ -272,6 +296,9 @@
 <style>
 .hover-shadow {
     box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+.bg-purple {
+    background-color: #6f42c1 !important;
 }
 </style>
 {% endblock %}

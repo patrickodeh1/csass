@@ -42,6 +42,11 @@ urlpatterns = [
     path('salesman/bookings/pending/', views.salesman_pending_bookings_view, name='salesman_pending_bookings'),
     path('salesman/bookings/<int:pk>/approve/', views.salesman_booking_approve, name='salesman_booking_approve'),
     path('salesman/bookings/<int:pk>/decline/', views.salesman_booking_decline, name='salesman_booking_decline'),
+    # Live Transfer
+    path('live-transfer/new/', views.live_transfer_create, name='live_transfer_create'),
+    
+    # Timeslot Management from Calendar
+    path('timeslot/<int:slot_id>/delete-from-calendar/', views.timeslot_delete_from_calendar, name='timeslot_delete_from_calendar'),
     
     # Commissions
     path('commissions/', views.commissions_view, name='commissions'),

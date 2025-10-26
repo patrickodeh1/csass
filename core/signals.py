@@ -39,19 +39,18 @@ def create_audit_log(user, action, entity_type, entity_id, changes, request=None
 @receiver(post_save, sender=Booking)
 def handle_booking_save(sender, instance, created, **kwargs):
     """
-    CRITICAL: Handle booking saves with FOUR key actions:
-    1. Mark the booked slot as inactive
-    2. Assign to correct payroll period (based on BOOKING CREATION TIME, not appointment date)
-    3. Delete 3 subsequent timeslots (1.5 hour buffer)
-    4. Log changes to audit trail
+    CRITICAL: Handle booking saves with FIVE key actions:
+    1. Mark the booked slot as inactive (for non-live-transfer bookings)
+    2. Mark opposite appointment type slot as inactive (prevent double-booking)
+    3. Assign to correct payroll period (based on BOOKING CREATION TIME)
+    4. Deactivate 4 timeslots total (booked + next 3 = 2 hour buffer including 30min booking)
+    5. Log changes to audit trail
     """
     
     # ==================== MARK BOOKED SLOT AS INACTIVE ====================
-    # CRITICAL: When a slot is booked (e.g., zoom at 9:00 AM):
-    # 1. Mark the booked slot as inactive/booked
-    # 2. Also mark the OPPOSITE appointment type (in_person at 9:00 AM) as inactive
-    #    so a different salesman can't double-book the same time slot
-    if created and instance.available_slot:
+    # CRITICAL: Only for bookings that use timeslots (Zoom and In-Person)
+    # Live Transfer bookings don't have associated slots
+    if created and instance.available_slot and instance.appointment_type != 'live_transfer':
         try:
             # Mark the booked slot
             instance.available_slot.is_active = False
@@ -84,18 +83,8 @@ def handle_booking_save(sender, instance, created, **kwargs):
             logger.error(f"Error marking slot as inactive for booking {instance.id}: {str(e)}")
     
     # ==================== PAYROLL ASSIGNMENT ====================
-    # CRITICAL CHANGE: Bookings are assigned to payroll based on WHEN THEY ARE CREATED,
-    # NOT when the appointment is scheduled.
-    #
-    # Example: If appointment is on Nov 30th but booking is created today (Oct 23),
-    # it goes into THIS WEEK's payroll (Oct 18-24), not the week of Nov 30th.
-    #
-    # Payroll cutoff: Thursday 3 PM EST
-    # - Bookings created BEFORE Thursday 3 PM EST go to current week's payroll
-    # - Bookings created AFTER Thursday 3 PM EST go to NEXT week's payroll
-    
+    # Same logic as before - bookings assigned based on creation time
     if created:
-        # Get current payroll period (respects Thursday 3 PM EST cutoff)
         current_period = get_current_payroll_period()
         
         logger.info(
@@ -104,7 +93,6 @@ def handle_booking_save(sender, instance, created, **kwargs):
             f"Booking created at={instance.created_at}"
         )
         
-        # Get or create the payroll period for this booking
         payroll_period, created_period = PayrollPeriod.objects.get_or_create(
             start_date=current_period['start_date'],
             end_date=current_period['end_date']
@@ -115,7 +103,6 @@ def handle_booking_save(sender, instance, created, **kwargs):
             f"start={payroll_period.start_date}, end={payroll_period.end_date}"
         )
         
-        # Assign booking to this payroll period
         if not instance.payroll_period:
             instance.payroll_period = payroll_period
             instance.save(update_fields=['payroll_period'])
@@ -130,23 +117,22 @@ def handle_booking_save(sender, instance, created, **kwargs):
                 f"⚠️ Booking {instance.id} already has payroll_period: {instance.payroll_period}"
             )
     
-    # ==================== DELETE SUBSEQUENT TIMESLOTS ====================
-    # CRITICAL CHANGE: When a booking is created, delete the next 3 timeslots
-    # (1.5 hours) to provide buffer time for the salesman.
-    # Deletes BOTH zoom and in_person types.
-    #
-    # Example: Booking at 9:00 AM → Delete 9:30, 10:00, 10:30 (both types)
+    # ==================== DEACTIVATE SUBSEQUENT TIMESLOTS ====================
+    # CRITICAL CHANGE: Deactivate 4 slots total (booked + next 3) = 2 hours
+    # This provides 1.5 hours AFTER the 30-minute booking completes
+    # Only for Zoom and In-Person (Live Transfer has no slots)
     
-    if created and instance.status in ['pending', 'confirmed', 'completed']:
+    if created and instance.status in ['pending', 'confirmed', 'completed'] and instance.appointment_type != 'live_transfer':
         try:
-            deleted_count = delete_subsequent_timeslots(instance)
-            if deleted_count > 0:
+            deactivated_count = delete_subsequent_timeslots(instance)
+            if deactivated_count > 0:
                 logger.info(
-                    f"Deleted {deleted_count} subsequent timeslots for booking {instance.id} "
+                    f"Deactivated {deactivated_count} timeslots (including booked slot + next 3) "
+                    f"for booking {instance.id} "
                     f"({instance.salesman.get_full_name()} on {instance.appointment_date} at {instance.appointment_time})"
                 )
         except Exception as e:
-            logger.error(f"Error deleting subsequent timeslots for booking {instance.id}: {str(e)}")
+            logger.error(f"Error deactivating timeslots for booking {instance.id}: {str(e)}")
     
     # ==================== AUDIT LOG ====================
     action = 'create' if created else 'update'

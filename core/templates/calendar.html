@@ -10,6 +10,52 @@
         </div>
     </div>
 
+    {% if is_remote_agent %}
+        <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #1E572E 0%, #70C074 100%);">
+            <div class="card-body py-3">
+                <div class="row align-items-center">
+
+                    <div class="col-md-8">
+                        <h5 class="text-white mb-0">
+                            <i class="bi bi-telephone-forward"></i> <strong>Quick Live Transfer Booking</strong>
+                        </h5>
+                        <small class="text-white opacity-75">
+                            Instant booking for phone transfers. <strong>Potential Commission: $30.00</strong> (pending admin approval)
+                        </small>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="{% url 'live_transfer_create' %}" class="btn btn-light btn-lg">
+                            <i class="bi bi-telephone-forward"></i> Create Live Transfer
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if user.is_staff %}
+        <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #1E572E 0%, #70C074 100%);">
+            <div class="card-body py-3">
+                <div class="row align-items-center">
+
+                    <div class="col-md-8">
+                        <h5 class="text-white mb-0">
+                            <i class="bi bi-telephone-forward"></i> <strong>Quick Live Transfer Booking</strong>
+                        </h5>
+                        <small class="text-white opacity-75">
+                            Instant booking for phone transfers. <strong>Potential Commission: $30.00</strong> (pending admin approval)
+                        </small>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="{% url 'live_transfer_create' %}" class="btn btn-light btn-lg">
+                            <i class="bi bi-telephone-forward"></i> Create Live Transfer
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-3">
@@ -86,7 +132,7 @@
         <div class="card-body">
             {% if view_mode == 'month' %}
             <div class="table-responsive">
-                <table class="table table-bordered calendar-table">
+                <table class="table table-bordered calendar-table" style="table-layout: fixed;">
                     <thead>
                         <tr>
                             <th class="text-dark fw-semibold fs-5 bg-white">Sunday</th>
@@ -248,10 +294,7 @@
                                     
                                     {% endif %}
                                     
-                                    <!-- View All Link -->
-                                    <div class="view-all-link">
-                                        <i class="bi bi-arrow-right-circle"></i> <strong>View All</strong>
-                                    </div>
+                                    
 
                                 {% endif %}
                             </td>

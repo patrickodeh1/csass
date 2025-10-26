@@ -61,6 +61,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     # Additional fields
     employee_id = models.CharField(max_length=20, unique=True, null=True, blank=True)
     phone_number = models.CharField(max_length=20)
+    phone_number = models.CharField(max_length=20)
+    company = models.CharField(max_length=200, blank=True, null=True, help_text="Company name for salesman")
     commission_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     is_active_salesman = models.BooleanField(default=False)
     hire_date = models.DateField(null=True)
@@ -236,6 +238,7 @@ class Booking(models.Model):
     TYPE_CHOICES = [
         ('zoom', 'Zoom'),
         ('in_person', 'In-Person'),
+        ('live_transfer', 'Live Transfer'),
     ]
     
     CANCELLATION_REASONS = [
@@ -337,6 +340,8 @@ class Booking(models.Model):
                 config = SystemConfig.get_config()
                 if self.appointment_type == 'zoom':
                     self.commission_amount = config.default_commission_rate_zoom
+                elif self.appointment_type == 'live_transfer':
+                    self.commission_amount = Decimal('30.00')
                 else:  # in_person
                     self.commission_amount = config.default_commission_rate_in_person
             else:
@@ -347,11 +352,12 @@ class Booking(models.Model):
         
         super().save(*args, **kwargs)
         # Always evaluate slot activation on create, and on any status change
-        if is_new:
-            self._handle_slot_activation(new_status)
-        elif new_status != old_status:
-            self._handle_slot_activation(new_status)
-            
+        if self.appointment_type != 'live_transfer':
+            if is_new:
+                self._handle_slot_activation(new_status)
+            elif new_status != old_status:
+                self._handle_slot_activation(new_status)
+                
         # Update the original status for next save
         self.__original_status = self.status
         # ---------------------------------------------------------------------
@@ -808,10 +814,10 @@ class CommunicationLog(models.Model):
     booking = models.ForeignKey('Booking', null=True, blank=True, on_delete=models.CASCADE, related_name='communications')
     recipient_email = models.EmailField(blank=True)
     recipient_phone = models.CharField(max_length=20, blank=True)
-    communication_type = models.CharField(max_length=10, choices=COMM_TYPES)
+    communication_type = models.CharField(max_length=10, choices=COMM_TYPES, null=True, blank=True)
     message_template = models.ForeignKey(MessageTemplate, null=True, blank=True, on_delete=models.SET_NULL)
     subject = models.CharField(max_length=200, blank=True)
-    body = models.TextField()
+    body = models.TextField(null=True, blank=True)
     sent_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, default='sent')
     error_message = models.TextField(blank=True)

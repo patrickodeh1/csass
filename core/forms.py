@@ -931,3 +931,66 @@ class AgentRegistrationForm(forms.ModelForm):
                 raise forms.ValidationError(f"Error saving user: {str(e)}")
         
         return user
+
+
+class LiveTransferForm(forms.Form):
+    """Simplified form for live transfer bookings - only name and phone required"""
+    client_first_name = forms.CharField(
+        max_length=100, 
+        required=True,
+        label='First Name',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter first name'})
+    )
+    client_last_name = forms.CharField(
+        max_length=100, 
+        required=False,
+        label='Last Name',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter last name (optional)'})
+    )
+    client_phone = forms.CharField(
+        max_length=20, 
+        required=True,
+        label='Phone Number',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter phone number'})
+    )
+    notes = forms.CharField(
+        required=False,
+        label='Notes',
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Additional notes (optional)'})
+    )
+    
+    def save(self, created_by):
+        """Create a live transfer booking - PENDING STATUS (requires admin approval)"""
+        from .models import Client, Booking
+        from django.utils import timezone
+        from decimal import Decimal
+        
+        # Create or get client (use placeholder email)
+        placeholder_email = f"livetransfer_{timezone.now().timestamp()}@placeholder.com"
+        
+        client, _ = Client.objects.get_or_create(
+            phone_number=self.cleaned_data['client_phone'],
+            defaults={
+                'business_name': 'Live Transfer',
+                'first_name': self.cleaned_data['client_first_name'],
+                'last_name': self.cleaned_data.get('client_last_name', ''),
+                'email': placeholder_email,
+                'created_by': created_by
+            }
+        )
+        
+        # Create booking - PENDING STATUS (requires admin approval for commission)
+        booking = Booking.objects.create(
+            client=client,
+            salesman=created_by,  # Assign to the agent who created it
+            appointment_date=timezone.now().date(),
+            appointment_time=timezone.now().time(),
+            duration_minutes=15,
+            appointment_type='live_transfer',
+            status='pending',  # CHANGED: Live transfers need admin approval
+            notes=self.cleaned_data.get('notes', ''),
+            commission_amount=Decimal('30.00'),  # Fixed $30 commission
+            created_by=created_by
+        )
+        
+        return booking

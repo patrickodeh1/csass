@@ -96,17 +96,21 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header bg-dark text-white">
-            <div class="row align-items-center">
-                <div class="col">
-                    <h5 class="mb-0 text-white fw-semibold fs-4">
-                        {{ start_date|date:"F Y" }}
-                        {% if view_mode == 'week' %} - Week of {{ start_date|date:"M d" }}{% endif %}
-                        {% if view_mode == 'day' %} - {{ current_date|date:"l, F d, Y" }}{% endif %}
-                        Appointment Booking
-                    </h5>
-                </div>
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <div class="row align-items-center">
+                            <div class="col">
+                <h5 class="mb-0 text-white fw-semibold fs-4">
+                    {{ start_date|date:"F Y" }}
+                    {% if view_mode == 'week' %} - Week of {{ start_date|date:"M d" }}{% endif %}
+                    {% if view_mode == 'day' %} - {{ current_date|date:"l, F d, Y" }}{% endif %}
+                </h5>
+            </div>
+            <div class="col-auto ms-auto">
+                <h5 class="mb-0 text-white fw-semibold fs-4">
+                    Appointment Booking
+                </h5>
+            </div>
                 <div class="col-auto">
                     {% if view_mode == 'month' %}
                         <a href="?date={{ prev_month|date:'Y-m-d' }}&view={{ view_mode }}{% if selected_salesman %}&salesman={{ selected_salesman }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}" class="btn btn-light btn-sm">

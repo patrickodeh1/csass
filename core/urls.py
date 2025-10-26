@@ -48,7 +48,8 @@ urlpatterns = [
     
     # Timeslot Management from Calendar
     path('timeslot/<int:slot_id>/delete-from-calendar/', views.timeslot_delete_from_calendar, name='timeslot_delete_from_calendar'),
-    
+    path('support/', views.support, name='support'),
+
     # Commissions
     path('commissions/', views.commissions_view, name='commissions'),
     

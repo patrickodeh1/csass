@@ -3569,3 +3569,15 @@ def timeslot_delete_from_calendar(request, slot_id):
         return redirect('calendar_day_detail', date_str=date.strftime('%Y-%m-%d'))
     
     return render(request, 'timeslot_quick_delete.html', {'slot': slot})
+
+@login_required
+def support(request):
+    """Display support contact information"""
+    context = {
+        'support_contact': {
+            'name': 'Payton Lowe',
+            'phone': '702-509-6502',
+            'email': 'payton@revenueaccelerationunit.com',
+        }
+    }
+    return render(request, 'support.html', context)

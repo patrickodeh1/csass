@@ -17,7 +17,7 @@ ALLOWED_HOSTS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "csass-web-service-production.up.railway.app",
+    "https://csass-web-service-production.up.railway.app",
     "https://tracking.revenueaccelerationunit.com",
 ]
 

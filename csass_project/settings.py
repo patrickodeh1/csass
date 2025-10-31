@@ -10,14 +10,14 @@ SECRET_KEY = config('SECRET_KEY', default='@(ggq*4*-!r=so-c=7mguzii1#hwd$26+zb!g
 DEBUG = config('DEBUG', default=False, cast=bool)
 #DEBUG = True
 ALLOWED_HOSTS = [
-    'csass-production.up.railway.app',
+    'csass-web-service-production.up.railway.app',
     'localhost',
     '127.0.0.1',
     'tracking.revenueaccelerationunit.com',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://csass-production.up.railway.app",
+    "csass-web-service-production.up.railway.app",
     "https://tracking.revenueaccelerationunit.com",
 ]
 

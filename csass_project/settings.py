@@ -110,7 +110,7 @@ USE_TZ = True
 import ssl
 
 # Get Redis URL and ensure SSL parameter is included
-REDIS_URL = os.getenv("REDIS_URL", "redis://default:uIyDJFvubShnjxxvspEDLAibuOGPqFzA@redis.railway.internal:6379")
+REDIS_URL = os.getenv("REDIS_URL", "redis://default:EduCoFGJoxTPxPEnpBzqHSvwEhXYkBgh@redis.railway.internal:6379")
 
 # Add SSL parameter if using rediss:// and it's not already there
 if REDIS_URL.startswith('rediss://') and 'ssl_cert_reqs' not in REDIS_URL:

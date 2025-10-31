@@ -1677,7 +1677,7 @@ def payroll_view(request):
             user_commissions[user_id]['total'] += adjustment.amount
     
     # Get available periods
-    available_periods = get_payroll_periods(2)
+    available_periods = get_payroll_periods(6)
     
     # Calculate summary totals
     user_commissions_list = list(user_commissions.values())

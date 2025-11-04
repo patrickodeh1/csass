@@ -408,64 +408,6 @@ def send_sms(to_phone: str, body: str) -> bool:
         return False
 
 
-def send_email_with_template(template_type, recipient_email, context, booking=None):
-    """Send email using MessageTemplate"""
-    try:
-        template = MessageTemplate.objects.get(message_type=template_type, is_active=True)
-    except MessageTemplate.DoesNotExist:
-        return False
-    
-    try:
-        subject, body = template.render_email(context)
-        
-        send_mail(
-            subject=subject,
-            message=strip_tags(body),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[recipient_email],
-            html_message=body,
-            fail_silently=False,
-        )
-        
-        # Log the email
-        CommunicationLog.objects.create(
-            booking=booking,
-            recipient_email=recipient_email,
-            communication_type='email',
-            message_template=template,
-            subject=subject,
-            body=body,
-            status='sent'
-        )
-        
-        return True
-    except Exception as e:
-        CommunicationLog.objects.create(
-            booking=booking,
-            recipient_email=recipient_email,
-            communication_type='email',
-            message_template=template,
-            subject=template.email_subject,
-            body=template.email_body,
-            status='failed',
-            error_message=str(e)
-        )
-        return False
-
-
-def send_sms_with_template(template_type, recipient_phone, context, booking=None):
-    """Send SMS using MessageTemplate"""
-    try:
-        template = MessageTemplate.objects.get(message_type=template_type, is_active=True)
-    except MessageTemplate.DoesNotExist:
-        return False
-    
-    body = template.render_sms(context)
-    return send_sms(recipient_phone, body)
-
-
-
-
 def start_drip_campaign(booking, campaign_type):
     """Start a drip campaign for a booking (AD or DNA)"""
     # Check if campaign already exists
@@ -545,20 +487,52 @@ def schedule_dna_drip(campaign):
             continue
 
 
-def send_drip_message(message_template, recipient_email, recipient_phone, context):
-    """Send a drip campaign message (both email and SMS)"""
+def send_drip_message(scheduled_message):
+    """
+    Send a drip campaign message (both email and SMS) using the themed template.
+    Updated to use the base email template wrapper.
+    """
+    message_template = scheduled_message.message_template
+    recipient_email = scheduled_message.recipient_email
+    recipient_phone = scheduled_message.recipient_phone
+    
+    # Build context from the booking
+    booking = scheduled_message.drip_campaign.booking
+    config = SystemConfig.get_config()
+    
+    context = {
+        'client_name': booking.client.get_full_name(),
+        'salesman_name': booking.salesman.get_full_name(),
+        'business_name': booking.client.business_name,
+        'appointment_date': booking.appointment_date.strftime('%B %d, %Y'),
+        'appointment_time': booking.appointment_time.strftime('%I:%M %p'),
+        'company_name': config.company_name,
+    }
+    
     email_sent = False
     sms_sent = False
     
-    # Send email
+    # Send email with theme
     try:
-        subject, body = message_template.render_email(context)
+        subject, body_content = message_template.render_email(context)
+        
+        # Wrap in base theme
+        email_context = {
+            'subject': subject,
+            'content': body_content,
+            'company_name': context.get('company_name', 'RAU Scheduling'),
+            'current_year': datetime.now().year,
+        }
+        
+        html_message = render_to_string('emails/base_email_template.html', email_context)
+        plain_message = strip_tags(body_content)
+        
         send_mail(
             subject=subject,
-            message=strip_tags(body),
+            message=plain_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[recipient_email],
-            html_message=body,
+            html_message=html_message,
             fail_silently=False,
         )
         email_sent = True
@@ -568,7 +542,7 @@ def send_drip_message(message_template, recipient_email, recipient_phone, contex
             communication_type='email',
             message_template=message_template,
             subject=subject,
-            body=body,
+            body=html_message,
             status='sent'
         )
     except Exception as e:
@@ -591,21 +565,40 @@ def send_drip_message(message_template, recipient_email, recipient_phone, contex
 
 
 def send_email_with_template(template_type, recipient_email, context, booking=None):
-    """Send email using MessageTemplate"""
+    """
+    Send email using MessageTemplate with base theme wrapper.
+    Automatically wraps database template content in styled email theme.
+    """
     try:
         template = MessageTemplate.objects.get(message_type=template_type, is_active=True)
     except MessageTemplate.DoesNotExist:
         return False
     
     try:
-        subject, body = template.render_email(context)
+        # Render the subject and body from database template
+        subject, body_content = template.render_email(context)
         
+        # Add additional context for the base template
+        email_context = {
+            'subject': subject,
+            'content': body_content,  # This is the HTML from your CSV
+            'company_name': context.get('company_name', 'RAU Scheduling'),
+            'current_year': datetime.now().year,
+        }
+        
+        # Wrap the content in the base email theme
+        html_message = render_to_string('emails/base_email_template.html', email_context)
+        
+        # Create plain text version by stripping HTML tags
+        plain_message = strip_tags(body_content)
+        
+        # Send email with both HTML and plain text versions
         send_mail(
             subject=subject,
-            message=strip_tags(body),
+            message=plain_message,  # Plain text fallback
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[recipient_email],
-            html_message=body,
+            html_message=html_message,  # Styled HTML version
             fail_silently=False,
         )
         
@@ -616,12 +609,14 @@ def send_email_with_template(template_type, recipient_email, context, booking=No
             communication_type='email',
             message_template=template,
             subject=subject,
-            body=body,
+            body=html_message,
             status='sent'
         )
         
         return True
+        
     except Exception as e:
+        # Log failed email
         CommunicationLog.objects.create(
             booking=booking,
             recipient_email=recipient_email,
@@ -634,7 +629,6 @@ def send_email_with_template(template_type, recipient_email, context, booking=No
         )
         return False
 
-
 def send_sms_with_template(template_type, recipient_phone, context, booking=None):
     """Send SMS using MessageTemplate"""
     try:
@@ -646,31 +640,6 @@ def send_sms_with_template(template_type, recipient_phone, context, booking=None
     return send_sms(recipient_phone, body)
 
 
-def send_booking_approved_notification(booking):
-    """Send notifications when booking is approved - uses templates"""
-    config = SystemConfig.get_config()
-    
-    context = {
-        'client_name': booking.client.get_full_name(),
-        'salesman_name': booking.salesman.get_full_name(),
-        'business_name': booking.client.business_name,
-        'appointment_date': booking.appointment_date.strftime('%B %d, %Y'),
-        'appointment_time': booking.appointment_time.strftime('%I:%M %p'),
-        'company_name': config.company_name,
-    }
-    
-    # Send to Agent (who created the booking)
-    if booking.created_by.groups.filter(name='remote_agent').exists():
-        send_email_with_template('booking_approved_agent', booking.created_by.email, context, booking)
-        send_sms_with_template('booking_approved_agent', getattr(booking.created_by, 'phone_number', None), context, booking)
-    
-    # Send to Client
-    send_email_with_template('booking_approved_client', booking.client.email, context, booking)
-    send_sms_with_template('booking_approved_client', booking.client.phone_number, context, booking)
-    
-    # Send to Salesman
-    send_email_with_template('booking_approved_salesman', booking.salesman.email, context, booking)
-    send_sms_with_template('booking_approved_salesman', getattr(booking.salesman, 'phone_number', None), context, booking)
 
 def check_booking_conflicts(salesman, appointment_date, appointment_time, duration_minutes, exclude_booking_id=None):
     """Check for booking conflicts including buffer time"""
@@ -698,11 +667,49 @@ def check_booking_conflicts(salesman, appointment_date, appointment_time, durati
     return False, None
 
 
-def send_booking_reminder(booking):
-    """Send appointment reminder to client and salesman - uses templates"""
+def send_booking_approved_notification(booking):
+    """Send notifications when booking is approved - separate messages for agent, client, and salesman"""
     config = SystemConfig.get_config()
     
-    context = {
+    # Base context
+    base_context = {
+        'client_name': booking.client.get_full_name(),
+        'salesman_name': booking.salesman.get_full_name(),
+        'business_name': booking.client.business_name,
+        'appointment_date': booking.appointment_date.strftime('%B %d, %Y'),
+        'appointment_time': booking.appointment_time.strftime('%I:%M %p'),
+        'company_name': config.company_name,
+    }
+    
+    # Send to Agent (who created the booking) - with agent-specific context
+    if booking.created_by.groups.filter(name='remote_agent').exists():
+        agent_context = {
+            **base_context,
+            'agent_name': booking.created_by.get_full_name(),
+        }
+        send_email_with_template('booking_approved_agent', booking.created_by.email, agent_context, booking)
+        if hasattr(booking.created_by, 'phone_number') and booking.created_by.phone_number:
+            send_sms_with_template('booking_approved_agent', booking.created_by.phone_number, agent_context, booking)
+    
+    # Send to Client - with client-specific context
+    client_context = base_context.copy()
+    send_email_with_template('booking_approved_client', booking.client.email, client_context, booking)
+    if booking.client.phone_number:
+        send_sms_with_template('booking_approved_client', booking.client.phone_number, client_context, booking)
+    
+    # Send to Salesman - with salesman-specific context
+    salesman_context = base_context.copy()
+    send_email_with_template('booking_approved_salesman', booking.salesman.email, salesman_context, booking)
+    if hasattr(booking.salesman, 'phone_number') and booking.salesman.phone_number:
+        send_sms_with_template('booking_approved_salesman', booking.salesman.phone_number, salesman_context, booking)
+
+
+def send_booking_reminder(booking):
+    """Send appointment reminder to client and salesman - separate messages for each"""
+    config = SystemConfig.get_config()
+    
+    # Base context
+    base_context = {
         'client_name': booking.client.get_full_name(),
         'salesman_name': booking.salesman.get_full_name(),
         'business_name': booking.client.business_name,
@@ -712,12 +719,16 @@ def send_booking_reminder(booking):
     }
     
     # Send to Client
-    send_email_with_template('booking_reminder_client', booking.client.email, context, booking)
-    send_sms_with_template('booking_reminder_client', booking.client.phone_number, context, booking)
+    client_context = base_context.copy()
+    send_email_with_template('booking_reminder_client', booking.client.email, client_context, booking)
+    if booking.client.phone_number:
+        send_sms_with_template('booking_reminder_client', booking.client.phone_number, client_context, booking)
     
     # Send to Salesman
-    send_email_with_template('booking_reminder_salesman', booking.salesman.email, context, booking)
-    send_sms_with_template('booking_reminder_salesman', getattr(booking.salesman, 'phone_number', None), context, booking)
+    salesman_context = base_context.copy()
+    send_email_with_template('booking_reminder_salesman', booking.salesman.email, salesman_context, booking)
+    if hasattr(booking.salesman, 'phone_number') and booking.salesman.phone_number:
+        send_sms_with_template('booking_reminder_salesman', booking.salesman.phone_number, salesman_context, booking)
 
 
 def send_booking_confirmation(booking, to_client=True, to_salesman=True):
@@ -790,31 +801,6 @@ def send_booking_cancellation(booking):
         fail_silently=False,
     )
 
-def check_booking_conflicts(salesman, appointment_date, appointment_time, duration_minutes, exclude_booking_id=None):
-    """Check for booking conflicts including buffer time"""
-    config = SystemConfig.get_config()
-    
-    # Calculate time range including buffer
-    start_dt = datetime.combine(appointment_date, appointment_time)
-    end_dt = start_dt + timedelta(minutes=duration_minutes + config.buffer_time_minutes)
-    
-    # Check for overlapping bookings
-    conflicts = Booking.objects.filter(
-        salesman=salesman,
-        appointment_date=appointment_date,
-        status__in=['confirmed', 'completed']
-    ).exclude(id=exclude_booking_id)
-    
-    for booking in conflicts:
-        booking_start = datetime.combine(booking.appointment_date, booking.appointment_time)
-        booking_end = booking_start + timedelta(minutes=booking.duration_minutes + config.buffer_time_minutes)
-        
-        # Check for overlap
-        if start_dt < booking_end and end_dt > booking_start:
-            return True, booking
-    
-    return False, None
-
 def send_booking_declined_notification(booking):
     """
     Send notification when booking is declined by admin (email + SMS to agent)
@@ -846,131 +832,6 @@ def send_booking_declined_notification(booking):
             send_sms(getattr(booking.created_by, 'phone_number', None), sms_body)
         except Exception:
             pass
-
-
-
-def start_drip_campaign(booking, campaign_type):
-    """Start a drip campaign for a booking (AD or DNA)"""
-    # Check if campaign already exists
-    existing = DripCampaign.objects.filter(
-        booking=booking,
-        campaign_type=campaign_type,
-        is_active=True
-    ).exists()
-    
-    if existing:
-        return None
-    
-    # Create the campaign
-    campaign = DripCampaign.objects.create(
-        booking=booking,
-        campaign_type=campaign_type
-    )
-    
-    # Schedule messages based on campaign type
-    if campaign_type == 'attended':
-        schedule_ad_drip(campaign)
-    elif campaign_type == 'did_not_attend':
-        schedule_dna_drip(campaign)
-    
-    return campaign
-
-
-def schedule_ad_drip(campaign):
-    """Schedule AD (Attended) drip messages - 21 days"""
-    booking = campaign.booking
-    now = timezone.now()
-    
-    # Day 1, 7, 14, 21
-    days = [1, 7, 14, 21]
-    template_types = ['ad_day_1', 'ad_day_7', 'ad_day_14', 'ad_day_21']
-    
-    for day, template_type in zip(days, template_types):
-        try:
-            template = MessageTemplate.objects.get(message_type=template_type, is_active=True)
-            scheduled_for = now + timedelta(days=day)
-            
-            ScheduledMessage.objects.create(
-                drip_campaign=campaign,
-                message_template=template,
-                recipient_email=booking.client.email,
-                recipient_phone=booking.client.phone_number,
-                scheduled_for=scheduled_for,
-                status='pending'
-            )
-        except MessageTemplate.DoesNotExist:
-            continue
-
-
-def schedule_dna_drip(campaign):
-    """Schedule DNA (Did Not Attend) drip messages - 90 days"""
-    booking = campaign.booking
-    now = timezone.now()
-    
-    # Day 1, 7, 30, 60, 90
-    days = [1, 7, 30, 60, 90]
-    template_types = ['dna_day_1', 'dna_day_7', 'dna_day_30', 'dna_day_60', 'dna_day_90']
-    
-    for day, template_type in zip(days, template_types):
-        try:
-            template = MessageTemplate.objects.get(message_type=template_type, is_active=True)
-            scheduled_for = now + timedelta(days=day)
-            
-            ScheduledMessage.objects.create(
-                drip_campaign=campaign,
-                message_template=template,
-                recipient_email=booking.client.email,
-                recipient_phone=booking.client.phone_number,
-                scheduled_for=scheduled_for,
-                status='pending'
-            )
-        except MessageTemplate.DoesNotExist:
-            continue
-
-
-def send_drip_message(message_template, recipient_email, recipient_phone, context):
-    """Send a drip campaign message (both email and SMS)"""
-    email_sent = False
-    sms_sent = False
-    
-    # Send email
-    try:
-        subject, body = message_template.render_email(context)
-        send_mail(
-            subject=subject,
-            message=strip_tags(body),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[recipient_email],
-            html_message=body,
-            fail_silently=False,
-        )
-        email_sent = True
-        
-        CommunicationLog.objects.create(
-            recipient_email=recipient_email,
-            communication_type='email',
-            message_template=message_template,
-            subject=subject,
-            body=body,
-            status='sent'
-        )
-    except Exception as e:
-        CommunicationLog.objects.create(
-            recipient_email=recipient_email,
-            communication_type='email',
-            message_template=message_template,
-            subject=message_template.email_subject,
-            body=message_template.email_body,
-            status='failed',
-            error_message=str(e)
-        )
-    
-    # Send SMS
-    if recipient_phone:
-        sms_body = message_template.render_sms(context)
-        sms_sent = send_sms(recipient_phone, sms_body)
-    
-    return email_sent or sms_sent
 
 
 def process_scheduled_messages():

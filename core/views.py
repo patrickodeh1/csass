@@ -24,8 +24,6 @@ from .decorators import group_required, admin_required, remote_agent_required
 from .utils import (
     get_current_payroll_period,
     get_payroll_periods,
-    send_booking_confirmation,
-    send_booking_cancellation,
     check_booking_conflicts,
     send_booking_approved_notification,
     send_booking_declined_notification,
@@ -604,7 +602,7 @@ def booking_create(request):
             else:
                 # For admin/salesman creating bookings directly
                 try:
-                    send_booking_confirmation(booking)
+                    send_booking_created_notification(booking)
                     messages.success(
                         request, 
                         '✓ Booking created and confirmed! Confirmation emails sent to all parties.'
@@ -837,11 +835,11 @@ def booking_cancel(request, pk):
             booking.save()
             
             # Send cancellation emails
-            try:
+            """try:
                 send_booking_cancellation(booking)
                 messages.success(request, 'Booking canceled successfully! Notifications sent.')
             except Exception as e:
-                messages.warning(request, f'Booking canceled but email failed: {str(e)}')
+                messages.warning(request, f'Booking canceled but email failed: {str(e)}')"""
             
             return redirect('calendar')
     else:
@@ -852,21 +850,6 @@ def booking_cancel(request, pk):
 # ============================================================
 # FIXED: Booking Status Management Views
 # ============================================================
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.http import HttpResponseForbidden
-from django.utils import timezone
-from .models import Booking
-from .utils import (
-    send_booking_confirmation,
-    send_booking_approved_notification,
-    send_booking_declined_notification,
-)
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -936,14 +919,7 @@ def booking_approve(request, pk):
             booking.save()
 
             # Send notifications (with individual error handling)
-            confirmation_sent = False
             approval_sent = False
-
-            try:
-                send_booking_confirmation(booking)
-                confirmation_sent = True
-            except Exception as e:
-                logger.warning(f"Confirmation email failed for booking {booking.id}: {str(e)}")
 
             try:
                 send_booking_approved_notification(booking)
@@ -967,7 +943,7 @@ def booking_approve(request, pk):
             )
 
             # Success message
-            email_status = "Confirmation emails sent" if (confirmation_sent and approval_sent) else "emails failed"
+            email_status = "Confirmation emails sent" if (approval_sent) else "emails failed"
             messages.success(
                 request,
                 f'✓ Booking approved for {booking.client.get_full_name()} with {booking.salesman.get_full_name()}. ({email_status})'
@@ -1196,7 +1172,6 @@ def salesman_booking_approve(request, pk):
             booking.save()
 
             try:
-                send_booking_confirmation(booking)
                 send_booking_approved_notification(booking)
             except Exception as e:
                 logger.warning(f"Email send failed: {str(e)}")

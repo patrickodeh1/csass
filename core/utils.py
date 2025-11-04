@@ -1,13 +1,16 @@
 from django.core.mail import send_mail
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
 from django.conf import settings
 from django.utils import timezone
+import logging
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from datetime import datetime, timedelta, time
 import os
 import pytz
 from .models import (SystemConfig, Booking, PayrollPeriod, AvailableTimeSlot, AvailabilityCycle, User, MessageTemplate, DripCampaign, 
                      ScheduledMessage, CommunicationLog)
+
+logger = logging.getLogger(__name__)
 
 
 def get_current_payroll_period():
@@ -484,7 +487,8 @@ def schedule_dna_drip(campaign):
                 status='pending'
             )
         except MessageTemplate.DoesNotExist:
-            continue
+            logger.error(f"MessageTemplate '{template_type}' not found!")
+            raise
 
 
 def send_drip_message(scheduled_message):
@@ -564,81 +568,170 @@ def send_drip_message(scheduled_message):
     return email_sent or sms_sent
 
 
-def send_email_with_template(template_type, recipient_email, context, booking=None):
+def send_drip_message(scheduled_message):
     """
-    Send email using MessageTemplate with base theme wrapper.
-    Automatically wraps database template content in styled email theme.
-    """
-    try:
-        template = MessageTemplate.objects.get(message_type=template_type, is_active=True)
-    except MessageTemplate.DoesNotExist:
-        return False
+    Send a drip campaign message (both email and SMS) using the themed template.
+    Updated to use the base email template wrapper.
     
+    NOTE: This function takes a ScheduledMessage object, not individual parameters.
+    """
+    message_template = scheduled_message.message_template
+    recipient_email = scheduled_message.recipient_email
+    recipient_phone = scheduled_message.recipient_phone
+    
+    # Build context from the booking
+    booking = scheduled_message.drip_campaign.booking
+    config = SystemConfig.get_config()
+    
+    context = {
+        'client_name': booking.client.get_full_name(),
+        'salesman_name': booking.salesman.get_full_name(),
+        'business_name': booking.client.business_name,
+        'appointment_date': booking.appointment_date.strftime('%B %d, %Y'),
+        'appointment_time': booking.appointment_time.strftime('%I:%M %p'),
+        'company_name': config.company_name,
+    }
+    
+    email_sent = False
+    sms_sent = False
+    
+    # Send email with theme
     try:
-        # Render the subject and body from database template
-        subject, body_content = template.render_email(context)
+        subject, body_content = message_template.render_email(context)
         
-        # Add additional context for the base template
+        # Wrap in base theme
         email_context = {
             'subject': subject,
-            'content': body_content,  # This is the HTML from your CSV
+            'content': body_content,
             'company_name': context.get('company_name', 'RAU Scheduling'),
             'current_year': datetime.now().year,
         }
         
-        # Wrap the content in the base email theme
         html_message = render_to_string('emails/base_email_template.html', email_context)
-        
-        # Create plain text version by stripping HTML tags
         plain_message = strip_tags(body_content)
         
-        # Send email with both HTML and plain text versions
         send_mail(
             subject=subject,
-            message=plain_message,  # Plain text fallback
+            message=plain_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[recipient_email],
-            html_message=html_message,  # Styled HTML version
+            html_message=html_message,
             fail_silently=False,
         )
+        email_sent = True
         
-        # Log the email
         CommunicationLog.objects.create(
-            booking=booking,
             recipient_email=recipient_email,
             communication_type='email',
-            message_template=template,
+            message_template=message_template,
             subject=subject,
             body=html_message,
             status='sent'
         )
-        
-        return True
-        
     except Exception as e:
-        # Log failed email
+        logger.error(f"Error sending drip email to {recipient_email}: {str(e)}")
         CommunicationLog.objects.create(
-            booking=booking,
             recipient_email=recipient_email,
             communication_type='email',
-            message_template=template,
-            subject=template.email_subject,
-            body=template.email_body,
+            message_template=message_template,
+            subject=message_template.email_subject,
+            body=message_template.email_body,
             status='failed',
             error_message=str(e)
         )
-        return False
-
-def send_sms_with_template(template_type, recipient_phone, context, booking=None):
-    """Send SMS using MessageTemplate"""
-    try:
-        template = MessageTemplate.objects.get(message_type=template_type, is_active=True)
-    except MessageTemplate.DoesNotExist:
-        return False
     
-    body = template.render_sms(context)
-    return send_sms(recipient_phone, body)
+    # Send SMS
+    if recipient_phone:
+        try:
+            sms_body = message_template.render_sms(context)
+            sms_sent = send_sms(recipient_phone, sms_body)
+        except Exception as e:
+            logger.error(f"Error sending drip SMS to {recipient_phone}: {str(e)}")
+    
+    return email_sent or sms_sent
 
+
+def send_drip_message(scheduled_message):
+    """
+    Send a drip campaign message (both email and SMS) using the themed template.
+    Updated to use the base email template wrapper.
+    
+    NOTE: This function takes a ScheduledMessage object, not individual parameters.
+    """
+    message_template = scheduled_message.message_template
+    recipient_email = scheduled_message.recipient_email
+    recipient_phone = scheduled_message.recipient_phone
+    
+    # Build context from the booking
+    booking = scheduled_message.drip_campaign.booking
+    config = SystemConfig.get_config()
+    
+    context = {
+        'client_name': booking.client.get_full_name(),
+        'salesman_name': booking.salesman.get_full_name(),
+        'business_name': booking.client.business_name,
+        'appointment_date': booking.appointment_date.strftime('%B %d, %Y'),
+        'appointment_time': booking.appointment_time.strftime('%I:%M %p'),
+        'company_name': config.company_name,
+    }
+    
+    email_sent = False
+    sms_sent = False
+    
+    # Send email with theme
+    try:
+        subject, body_content = message_template.render_email(context)
+        
+        # Wrap in base theme
+        email_context = {
+            'subject': subject,
+            'content': body_content,
+            'company_name': context.get('company_name', 'RAU Scheduling'),
+            'current_year': datetime.now().year,
+        }
+        
+        html_message = render_to_string('emails/base_email_template.html', email_context)
+        plain_message = strip_tags(body_content)
+        
+        send_mail(
+            subject=subject,
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[recipient_email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+        email_sent = True
+        
+        CommunicationLog.objects.create(
+            recipient_email=recipient_email,
+            communication_type='email',
+            message_template=message_template,
+            subject=subject,
+            body=html_message,
+            status='sent'
+        )
+    except Exception as e:
+        logger.error(f"Error sending drip email to {recipient_email}: {str(e)}")
+        CommunicationLog.objects.create(
+            recipient_email=recipient_email,
+            communication_type='email',
+            message_template=message_template,
+            subject=message_template.email_subject,
+            body=message_template.email_body,
+            status='failed',
+            error_message=str(e)
+        )
+    
+    # Send SMS
+    if recipient_phone:
+        try:
+            sms_body = message_template.render_sms(context)
+            sms_sent = send_sms(recipient_phone, sms_body)
+        except Exception as e:
+            logger.error(f"Error sending drip SMS to {recipient_phone}: {str(e)}")
+    
+    return email_sent or sms_sent
 
 
 def check_booking_conflicts(salesman, appointment_date, appointment_time, duration_minutes, exclude_booking_id=None):
@@ -667,6 +760,98 @@ def check_booking_conflicts(salesman, appointment_date, appointment_time, durati
     return False, None
 
 
+def send_email_with_template(template_type, recipient_email, context, booking=None):
+    """
+    Send email using MessageTemplate with base theme wrapper.
+    Automatically wraps database template content in styled email theme.
+    """
+    from .models import MessageTemplate, CommunicationLog
+    
+    try:
+        template = MessageTemplate.objects.get(message_type=template_type, is_active=True)
+    except MessageTemplate.DoesNotExist:
+        logger.error(f"MessageTemplate '{template_type}' not found or inactive")
+        return False
+    
+    try:
+        # Render the subject and body from database template
+        subject, body_content = template.render_email(context)
+        
+        # Add additional context for the base template
+        email_context = {
+            'subject': subject,
+            'content': body_content,
+            'company_name': context.get('company_name', 'RAU Scheduling'),
+            'current_year': datetime.now().year,
+        }
+        
+        # Wrap the content in the base email theme
+        html_message = render_to_string('emails/base_email_template.html', email_context)
+        
+        # Create plain text version by stripping HTML tags
+        plain_message = strip_tags(body_content)
+        
+        # Send email with both HTML and plain text versions
+        send_mail(
+            subject=subject,
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[recipient_email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+        
+        # Log the email
+        CommunicationLog.objects.create(
+            booking=booking,
+            recipient_email=recipient_email,
+            communication_type='email',
+            message_template=template,
+            subject=subject,
+            body=html_message,
+            status='sent'
+        )
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error sending email with template '{template_type}' to {recipient_email}: {str(e)}")
+        # Log failed email
+        CommunicationLog.objects.create(
+            booking=booking,
+            recipient_email=recipient_email,
+            communication_type='email',
+            message_template=template,
+            subject=template.email_subject,
+            body=template.email_body,
+            status='failed',
+            error_message=str(e)
+        )
+        return False
+
+
+def send_sms_with_template(template_type, recipient_phone, context, booking=None):
+    """Send SMS using MessageTemplate"""
+    from .models import MessageTemplate
+    
+    if not recipient_phone:
+        return False
+        
+    try:
+        template = MessageTemplate.objects.get(message_type=template_type, is_active=True)
+    except MessageTemplate.DoesNotExist:
+        logger.error(f"MessageTemplate '{template_type}' not found or inactive")
+        return False
+    
+    try:
+        from .utils import send_sms
+        body = template.render_sms(context)
+        return send_sms(recipient_phone, body)
+    except Exception as e:
+        logger.error(f"Error sending SMS with template '{template_type}' to {recipient_phone}: {str(e)}")
+        return False
+
+
 def send_booking_approved_notification(booking):
     """Send notifications when booking is approved - separate messages for agent, client, and salesman
     
@@ -674,6 +859,8 @@ def send_booking_approved_notification(booking):
     In-Person: Includes location
     Zoom: Includes zoom_link
     """
+    from .models import SystemConfig
+    
     config = SystemConfig.get_config()
     
     # Determine meeting type details
@@ -681,11 +868,11 @@ def send_booking_approved_notification(booking):
     if booking.appointment_type == 'live_transfer':
         meeting_details = 'This is a LIVE TRANSFER appointment.'
     elif booking.appointment_type == 'in_person':
-        meeting_details = f'Location: {booking.location}' if booking.location else 'In-Person Meeting'
+        meeting_details = f'Location: {booking.meeting_address}' if booking.meeting_address else 'In-Person Meeting'
     elif booking.appointment_type == 'zoom':
         meeting_details = f'Zoom Link: {booking.zoom_link}' if booking.zoom_link else 'Zoom Meeting'
     
-    # Base context
+    # Base context - INCLUDES booking_status
     base_context = {
         'client_name': booking.client.get_full_name(),
         'salesman_name': booking.salesman.get_full_name(),
@@ -695,40 +882,32 @@ def send_booking_approved_notification(booking):
         'company_name': config.company_name,
         'meeting_type': booking.get_appointment_type_display(),
         'meeting_details': meeting_details,
-        'location': booking.location if booking.appointment_type == 'in_person' else '',
+        'location': booking.meeting_address if booking.appointment_type == 'in_person' else '',
         'zoom_link': booking.zoom_link if booking.appointment_type == 'zoom' else '',
+        'booking_status': booking.get_status_display(),
     }
     
     # For LIVE TRANSFER: Only send to agent and admin
     if booking.appointment_type == 'live_transfer':
         # Send to Agent
-        if booking.created_by.groups.filter(name='remote_agent').exists():
-            agent_context = {
-                **base_context,
-                'agent_name': booking.created_by.get_full_name(),
-            }
+        if booking.created_by and booking.created_by.groups.filter(name='remote_agent').exists():
+            agent_context = {**base_context, 'agent_name': booking.created_by.get_full_name()}
             send_email_with_template('booking_approved_agent', booking.created_by.email, agent_context, booking)
             if hasattr(booking.created_by, 'phone_number') and booking.created_by.phone_number:
                 send_sms_with_template('booking_approved_agent', booking.created_by.phone_number, agent_context, booking)
         
-        # Send to Admin (if approved_by exists)
+        # Send to Admin
         if booking.approved_by:
-            admin_context = {
-                **base_context,
-                'admin_name': booking.approved_by.get_full_name(),
-            }
+            admin_context = {**base_context, 'admin_name': booking.approved_by.get_full_name()}
             send_email_with_template('booking_approved_admin', booking.approved_by.email, admin_context, booking)
             if hasattr(booking.approved_by, 'phone_number') and booking.approved_by.phone_number:
                 send_sms_with_template('booking_approved_admin', booking.approved_by.phone_number, admin_context, booking)
     else:
         # For IN-PERSON and ZOOM: Send to agent, client, and salesman
         
-        # Send to Agent (who created the booking)
-        if booking.created_by.groups.filter(name='remote_agent').exists():
-            agent_context = {
-                **base_context,
-                'agent_name': booking.created_by.get_full_name(),
-            }
+        # Send to Agent
+        if booking.created_by and booking.created_by.groups.filter(name='remote_agent').exists():
+            agent_context = {**base_context, 'agent_name': booking.created_by.get_full_name()}
             send_email_with_template('booking_approved_agent', booking.created_by.email, agent_context, booking)
             if hasattr(booking.created_by, 'phone_number') and booking.created_by.phone_number:
                 send_sms_with_template('booking_approved_agent', booking.created_by.phone_number, agent_context, booking)
@@ -746,22 +925,18 @@ def send_booking_approved_notification(booking):
             send_sms_with_template('booking_approved_salesman', booking.salesman.phone_number, salesman_context, booking)
 
 
-def send_booking_reminder(booking):
-    """Send appointment reminder to client and salesman - separate messages for each
+def send_booking_created_notification(booking):
+    """Send notifications when a new booking is created"""
+    from .models import SystemConfig, User
     
-    Includes location for in-person or zoom_link for zoom meetings.
-    Reminders are NOT sent for live_transfer bookings.
-    """
     config = SystemConfig.get_config()
     
-    # Skip reminders for live transfers
-    if booking.appointment_type == 'live_transfer':
-        return
-    
-    # Determine meeting type details for reminder
+    # Determine meeting type details
     meeting_details = ''
-    if booking.appointment_type == 'in_person':
-        meeting_details = f'Location: {booking.location}' if booking.location else 'In-Person Meeting'
+    if booking.appointment_type == 'live_transfer':
+        meeting_details = 'This is a LIVE TRANSFER appointment.'
+    elif booking.appointment_type == 'in_person':
+        meeting_details = f'Location: {booking.meeting_address}' if booking.meeting_address else 'In-Person Meeting'
     elif booking.appointment_type == 'zoom':
         meeting_details = f'Zoom Link: {booking.zoom_link}' if booking.zoom_link else 'Zoom Meeting'
     
@@ -775,8 +950,103 @@ def send_booking_reminder(booking):
         'company_name': config.company_name,
         'meeting_type': booking.get_appointment_type_display(),
         'meeting_details': meeting_details,
-        'location': booking.location if booking.appointment_type == 'in_person' else '',
+        'location': booking.meeting_address if booking.appointment_type == 'in_person' else '',
         'zoom_link': booking.zoom_link if booking.appointment_type == 'zoom' else '',
+        'booking_status': booking.get_status_display(),
+    }
+    
+    # Send to Agent
+    if booking.created_by and booking.created_by.groups.filter(name='remote_agent').exists():
+        agent_context = {**base_context, 'agent_name': booking.created_by.get_full_name()}
+        send_email_with_template('booking_created_agent', booking.created_by.email, agent_context, booking)
+        if hasattr(booking.created_by, 'phone_number') and booking.created_by.phone_number:
+            send_sms_with_template('booking_created_agent', booking.created_by.phone_number, agent_context, booking)
+    
+    # Send to Admin(s)
+    admin_users = User.objects.filter(is_staff=True, is_active=True)
+    for admin in admin_users:
+        admin_context = {
+            **base_context,
+            'admin_name': admin.get_full_name(),
+            'agent_name': booking.created_by.get_full_name() if booking.created_by else 'System',
+        }
+        send_email_with_template('booking_created_admin', admin.email, admin_context, booking)
+        if hasattr(admin, 'phone_number') and admin.phone_number:
+            send_sms_with_template('booking_created_admin', admin.phone_number, admin_context, booking)
+
+
+def send_booking_declined_notification(booking):
+    """Send notification when booking is declined"""
+    from .models import SystemConfig
+    
+    config = SystemConfig.get_config()
+    
+    # Determine meeting type details
+    meeting_details = ''
+    if booking.appointment_type == 'live_transfer':
+        meeting_details = 'LIVE TRANSFER'
+    elif booking.appointment_type == 'in_person':
+        meeting_details = f'In-Person at {booking.meeting_address}' if booking.meeting_address else 'In-Person Meeting'
+    elif booking.appointment_type == 'zoom':
+        meeting_details = 'Zoom Meeting'
+    
+    base_context = {
+        'client_name': booking.client.get_full_name(),
+        'salesman_name': booking.salesman.get_full_name(),
+        'business_name': booking.client.business_name,
+        'appointment_date': booking.appointment_date.strftime('%B %d, %Y'),
+        'appointment_time': booking.appointment_time.strftime('%I:%M %p'),
+        'company_name': config.company_name,
+        'meeting_type': booking.get_appointment_type_display(),
+        'meeting_details': meeting_details,
+        'decline_reason': f'<p><strong>Reason:</strong> {booking.decline_reason}</p>' if booking.decline_reason else '',
+        'decline_reason_short': booking.decline_reason[:50] if booking.decline_reason else 'See email',
+        'admin_name': booking.declined_by.get_full_name() if booking.declined_by else 'Admin',
+        'booking_status': booking.get_status_display(),
+    }
+    
+    # Send to Agent
+    if booking.created_by and booking.created_by.groups.filter(name='remote_agent').exists():
+        agent_context = {**base_context, 'agent_name': booking.created_by.get_full_name()}
+        send_email_with_template('booking_declined_agent', booking.created_by.email, agent_context, booking)
+        if hasattr(booking.created_by, 'phone_number') and booking.created_by.phone_number:
+            send_sms_with_template('booking_declined_agent', booking.created_by.phone_number, agent_context, booking)
+    
+    # Send to Admin
+    if booking.declined_by:
+        admin_context = base_context.copy()
+        send_email_with_template('booking_declined_admin', booking.declined_by.email, admin_context, booking)
+
+
+def send_booking_reminder(booking):
+    """Send appointment reminder to client and salesman"""
+    from .models import SystemConfig
+    
+    config = SystemConfig.get_config()
+    
+    # Skip reminders for live transfers
+    if booking.appointment_type == 'live_transfer':
+        return
+    
+    # Determine meeting type details
+    meeting_details = ''
+    if booking.appointment_type == 'in_person':
+        meeting_details = f'Location: {booking.meeting_address}' if booking.meeting_address else 'In-Person Meeting'
+    elif booking.appointment_type == 'zoom':
+        meeting_details = f'Zoom Link: {booking.zoom_link}' if booking.zoom_link else 'Zoom Meeting'
+    
+    base_context = {
+        'client_name': booking.client.get_full_name(),
+        'salesman_name': booking.salesman.get_full_name(),
+        'business_name': booking.client.business_name,
+        'appointment_date': booking.appointment_date.strftime('%B %d, %Y'),
+        'appointment_time': booking.appointment_time.strftime('%I:%M %p'),
+        'company_name': config.company_name,
+        'meeting_type': booking.get_appointment_type_display(),
+        'meeting_details': meeting_details,
+        'location': booking.meeting_address if booking.appointment_type == 'in_person' else '',
+        'zoom_link': booking.zoom_link if booking.appointment_type == 'zoom' else '',
+        'booking_status': booking.get_status_display(),
     }
     
     # Send to Client
@@ -792,219 +1062,6 @@ def send_booking_reminder(booking):
         send_sms_with_template('booking_reminder_salesman', booking.salesman.phone_number, salesman_context, booking)
 
 
-def send_booking_confirmation(booking, to_client=True, to_salesman=True):
-    """Send booking confirmation email + SMS (if configured)."""
-    config = SystemConfig.get_config()
-    
-    context = {
-        'booking': booking,
-        'company_name': config.company_name,
-    }
-    
-    if to_client:
-        subject = f"Appointment Confirmed with {booking.salesman.get_full_name()}"
-        html_message = render_to_string('emails/booking_confirmation_client.html', context)
-        plain_message = strip_tags(html_message)
-        
-        send_mail(
-            subject=subject,
-            message=plain_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[booking.client.email],
-            html_message=html_message,
-            fail_silently=False,
-        )
-        # SMS to client
-        try:
-            sms_body = f"Confirmed: {booking.appointment_date} at {booking.appointment_time.strftime('%I:%M %p')} with {booking.salesman.get_full_name()}"
-            send_sms(getattr(booking.client, 'phone_number', None), sms_body)
-        except Exception:
-            pass
-    
-    if to_salesman:
-        subject = f"New Appointment: {booking.client.get_full_name()} on {booking.appointment_date}"
-        html_message = render_to_string('emails/booking_confirmation_salesman.html', context)
-        plain_message = strip_tags(html_message)
-        
-        send_mail(
-            subject=subject,
-            message=plain_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[booking.salesman.email],
-            html_message=html_message,
-            fail_silently=False,
-        )
-        # SMS to salesman
-        try:
-            sms_body = f"New appt: {booking.client.get_full_name()} {booking.appointment_date} {booking.appointment_time.strftime('%I:%M %p')}"
-            send_sms(getattr(booking.salesman, 'phone_number', None), sms_body)
-        except Exception:
-            pass
-def send_booking_cancellation(booking):
-    """Send cancellation notification"""
-    config = SystemConfig.get_config()
-    
-    context = {
-        'booking': booking,
-        'company_name': config.company_name,
-    }
-    
-    subject = f"Appointment Canceled: {booking.appointment_date}"
-    html_message = render_to_string('emails/booking_cancellation.html', context)
-    plain_message = strip_tags(html_message)
-    
-    send_mail(
-        subject=subject,
-        message=plain_message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[booking.client.email, booking.salesman.email],
-        html_message=html_message,
-        fail_silently=False,
-    )
-
-def send_booking_declined_notification(booking):
-    """
-    Send notification when booking is declined by admin (email + SMS to agent and admin)
-    
-    For all booking types (including live_transfer): Only sends to agent and admin who declined.
-    """
-    config = SystemConfig.get_config()
-    
-    # Determine meeting type details
-    meeting_details = ''
-    if booking.appointment_type == 'live_transfer':
-        meeting_details = 'LIVE TRANSFER'
-    elif booking.appointment_type == 'in_person':
-        meeting_details = f'In-Person at {booking.location}' if booking.location else 'In-Person Meeting'
-    elif booking.appointment_type == 'zoom':
-        meeting_details = 'Zoom Meeting'
-    
-    base_context = {
-        'client_name': booking.client.get_full_name(),
-        'salesman_name': booking.salesman.get_full_name(),
-        'business_name': booking.client.business_name,
-        'appointment_date': booking.appointment_date.strftime('%B %d, %Y'),
-        'appointment_time': booking.appointment_time.strftime('%I:%M %p'),
-        'company_name': config.company_name,
-        'meeting_type': booking.get_appointment_type_display(),
-        'meeting_details': meeting_details,
-        'decline_reason': booking.decline_reason,
-        'admin_name': booking.declined_by.get_full_name() if booking.declined_by else 'Admin',
-    }
-    
-    # Email/SMS to remote agent who created the booking
-    if booking.created_by.groups.filter(name='remote_agent').exists():
-        agent_context = {
-            **base_context,
-            'agent_name': booking.created_by.get_full_name(),
-        }
-        
-        # Try to use template if available, otherwise fall back to old method
-        try:
-            send_email_with_template('booking_declined_agent', booking.created_by.email, agent_context, booking)
-        except Exception:
-            # Fallback to old method
-            subject = f'Booking Declined - {booking.client.get_full_name()}'
-            context = {
-                'booking': booking,
-                'agent': booking.created_by,
-                'admin': booking.declined_by,
-            }
-            message = render_to_string('emails/booking_declined.txt', context)
-            html_message = render_to_string('emails/booking_declined.html', context)
-            send_mail(
-                subject=subject,
-                message=message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[booking.created_by.email],
-                html_message=html_message,
-                fail_silently=False,
-            )
-        
-        # SMS to agent
-        try:
-            sms_body = f"Declined: {booking.client.get_full_name()} {booking.appointment_date} {booking.appointment_time.strftime('%I:%M %p')} ({meeting_details})"
-            send_sms(getattr(booking.created_by, 'phone_number', None), sms_body)
-        except Exception:
-            pass
-    
-    # Send to Admin who declined (optional notification)
-    if booking.declined_by:
-        admin_context = {
-            **base_context,
-        }
-        try:
-            send_email_with_template('booking_declined_admin', booking.declined_by.email, admin_context, booking)
-        except Exception:
-            pass  # Admin notification is optional
-
-def send_booking_created_notification(booking):
-    """
-    Send notifications when a new booking is created - separate messages for agent and admin.
-    
-    Behavior by appointment type:
-    - Live Transfer: Sends to agent and admin only (not client/salesman)
-    - In-Person: Sends to agent, admin, and includes location
-    - Zoom: Sends to agent, admin, and includes zoom_link
-    """
-    config = SystemConfig.get_config()
-    
-    # Determine meeting type details
-    meeting_details = ''
-    if booking.appointment_type == 'live_transfer':
-        meeting_details = 'This is a LIVE TRANSFER appointment.'
-    elif booking.appointment_type == 'in_person':
-        meeting_details = f'Location: {booking.location}' if booking.location else 'In-Person Meeting'
-    elif booking.appointment_type == 'zoom':
-        meeting_details = f'Zoom Link: {booking.zoom_link}' if booking.zoom_link else 'Zoom Meeting'
-    
-    # Base context for all notifications
-    base_context = {
-        'client_name': booking.client.get_full_name(),
-        'salesman_name': booking.salesman.get_full_name(),
-        'business_name': booking.client.business_name,
-        'appointment_date': booking.appointment_date.strftime('%B %d, %Y'),
-        'appointment_time': booking.appointment_time.strftime('%I:%M %p'),
-        'company_name': config.company_name,
-        'meeting_type': booking.get_appointment_type_display(),
-        'meeting_details': meeting_details,
-        'location': booking.location if booking.appointment_type == 'in_person' else '',
-        'zoom_link': booking.zoom_link if booking.appointment_type == 'zoom' else '',
-        'booking_status': booking.get_status_display(),
-    }
-    
-    # Send to Agent (who created the booking)
-    if booking.created_by.groups.filter(name='remote_agent').exists():
-        agent_context = {
-            **base_context,
-            'agent_name': booking.created_by.get_full_name(),
-        }
-        
-        # Email to agent
-        send_email_with_template('booking_created_agent', booking.created_by.email, agent_context, booking)
-        
-        # SMS to agent (if phone number exists)
-        if hasattr(booking.created_by, 'phone_number') and booking.created_by.phone_number:
-            send_sms_with_template('booking_created_agent', booking.created_by.phone_number, agent_context, booking)
-    
-    # Send to Admin(s)
-    # Get all active admin users
-    admin_users = User.objects.filter(is_staff=True, is_active=True)
-    
-    for admin in admin_users:
-        admin_context = {
-            **base_context,
-            'admin_name': admin.get_full_name(),
-            'agent_name': booking.created_by.get_full_name(),
-        }
-        
-        # Email to admin
-        send_email_with_template('booking_created_admin', admin.email, admin_context, booking)
-        
-        # SMS to admin (if phone number exists)
-        if hasattr(admin, 'phone_number') and admin.phone_number:
-            send_sms_with_template('booking_created_admin', admin.phone_number, admin_context, booking)
-            
 def process_scheduled_messages():
     """Process all pending scheduled messages (call from cron job)"""
     now = timezone.now()

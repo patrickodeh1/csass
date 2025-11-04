@@ -33,6 +33,7 @@ from .utils import (
     cleanup_old_slots,
     ensure_timeslots_for_payroll_period,
     mark_past_slots_inactive,
+    send_booking_created_notification,
     mark_elapsed_today_slots_inactive,
 )
 from django.utils.crypto import get_random_string
@@ -584,17 +585,29 @@ def booking_create(request):
             is_remote_agent = request.user.groups.filter(name='remote_agent').exists()
             
             if is_remote_agent:
-                messages.warning(
-                    request, 
-                    f'Booking submitted successfully! Status: Pending Admin Approval. '
-                    f'You will receive an email once the booking is reviewed.'
-                )
+                # SEND BOOKING CREATED NOTIFICATIONS TO AGENT AND ADMIN
+                try:
+                    send_booking_created_notification(booking)
+                    messages.warning(
+                        request, 
+                        f'✓ Booking submitted successfully! Status: Pending Admin Approval. '
+                        f'You will receive an email/SMS once the booking is reviewed. '
+                        f'Admin has been notified.'
+                    )
+                except Exception as e:
+                    logger.warning(f"Booking created but notification failed: {str(e)}")
+                    messages.warning(
+                        request, 
+                        f'✓ Booking submitted successfully! Status: Pending Admin Approval. '
+                        f'⚠️ Notification emails may have failed, but admin can see the booking in the system.'
+                    )
             else:
+                # For admin/salesman creating bookings directly
                 try:
                     send_booking_confirmation(booking)
                     messages.success(
                         request, 
-                        'Booking created and confirmed! Confirmation emails sent to all parties.'
+                        '✓ Booking created and confirmed! Confirmation emails sent to all parties.'
                     )
                 except Exception as e:
                     messages.warning(request, f'Booking created but email failed: {str(e)}')
@@ -3480,12 +3493,27 @@ def live_transfer_create(request):
         form = LiveTransferForm(request.POST)
         if form.is_valid():
             booking = form.save(created_by=request.user)
-            messages.warning(
-                request, 
-                f'✓ Live Transfer booking submitted successfully! '
-                f'Client: {booking.client.get_full_name()}, Potential Commission: ${booking.commission_amount}. '
-                f'⚠️ Status: PENDING ADMIN APPROVAL. You will receive commission once approved.'
-            )
+            
+            # SEND BOOKING CREATED NOTIFICATIONS TO AGENT AND ADMIN
+            try:
+                send_booking_created_notification(booking)
+                messages.warning(
+                    request, 
+                    f'✓ Live Transfer booking submitted successfully! '
+                    f'Client: {booking.client.get_full_name()}, Potential Commission: ${booking.commission_amount}. '
+                    f'⚠️ Status: PENDING ADMIN APPROVAL. You will receive an email/SMS once approved. '
+                    f'Admin has been notified.'
+                )
+            except Exception as e:
+                logger.warning(f"Live transfer booking created but notification failed: {str(e)}")
+                messages.warning(
+                    request, 
+                    f'✓ Live Transfer booking submitted successfully! '
+                    f'Client: {booking.client.get_full_name()}, Potential Commission: ${booking.commission_amount}. '
+                    f'⚠️ Status: PENDING ADMIN APPROVAL. '
+                    f'⚠️ Notification emails may have failed, but admin can see the booking in the system.'
+                )
+            
             return redirect('calendar')
     else:
         form = LiveTransferForm()

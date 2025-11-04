@@ -1031,7 +1031,7 @@ class LiveTransferForm(forms.Form):
         client, _ = Client.objects.get_or_create(
             phone_number=self.cleaned_data['client_phone'],
             defaults={
-                'business_name': 'Live Transfer',
+                'business_name': 'CETS/HME In House Live Transfers',
                 'first_name': self.cleaned_data['client_first_name'],
                 'last_name': self.cleaned_data.get('client_last_name', ''),
                 'email': placeholder_email,

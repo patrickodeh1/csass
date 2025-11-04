@@ -668,8 +668,22 @@ def check_booking_conflicts(salesman, appointment_date, appointment_time, durati
 
 
 def send_booking_approved_notification(booking):
-    """Send notifications when booking is approved - separate messages for agent, client, and salesman"""
+    """Send notifications when booking is approved - separate messages for agent, client, and salesman
+    
+    Live Transfer: Only sends to agent and admin (not client/salesman)
+    In-Person: Includes location
+    Zoom: Includes zoom_link
+    """
     config = SystemConfig.get_config()
+    
+    # Determine meeting type details
+    meeting_details = ''
+    if booking.appointment_type == 'live_transfer':
+        meeting_details = 'This is a LIVE TRANSFER appointment.'
+    elif booking.appointment_type == 'in_person':
+        meeting_details = f'Location: {booking.location}' if booking.location else 'In-Person Meeting'
+    elif booking.appointment_type == 'zoom':
+        meeting_details = f'Zoom Link: {booking.zoom_link}' if booking.zoom_link else 'Zoom Meeting'
     
     # Base context
     base_context = {
@@ -679,34 +693,77 @@ def send_booking_approved_notification(booking):
         'appointment_date': booking.appointment_date.strftime('%B %d, %Y'),
         'appointment_time': booking.appointment_time.strftime('%I:%M %p'),
         'company_name': config.company_name,
+        'meeting_type': booking.get_appointment_type_display(),
+        'meeting_details': meeting_details,
+        'location': booking.location if booking.appointment_type == 'in_person' else '',
+        'zoom_link': booking.zoom_link if booking.appointment_type == 'zoom' else '',
     }
     
-    # Send to Agent (who created the booking) - with agent-specific context
-    if booking.created_by.groups.filter(name='remote_agent').exists():
-        agent_context = {
-            **base_context,
-            'agent_name': booking.created_by.get_full_name(),
-        }
-        send_email_with_template('booking_approved_agent', booking.created_by.email, agent_context, booking)
-        if hasattr(booking.created_by, 'phone_number') and booking.created_by.phone_number:
-            send_sms_with_template('booking_approved_agent', booking.created_by.phone_number, agent_context, booking)
-    
-    # Send to Client - with client-specific context
-    client_context = base_context.copy()
-    send_email_with_template('booking_approved_client', booking.client.email, client_context, booking)
-    if booking.client.phone_number:
-        send_sms_with_template('booking_approved_client', booking.client.phone_number, client_context, booking)
-    
-    # Send to Salesman - with salesman-specific context
-    salesman_context = base_context.copy()
-    send_email_with_template('booking_approved_salesman', booking.salesman.email, salesman_context, booking)
-    if hasattr(booking.salesman, 'phone_number') and booking.salesman.phone_number:
-        send_sms_with_template('booking_approved_salesman', booking.salesman.phone_number, salesman_context, booking)
+    # For LIVE TRANSFER: Only send to agent and admin
+    if booking.appointment_type == 'live_transfer':
+        # Send to Agent
+        if booking.created_by.groups.filter(name='remote_agent').exists():
+            agent_context = {
+                **base_context,
+                'agent_name': booking.created_by.get_full_name(),
+            }
+            send_email_with_template('booking_approved_agent', booking.created_by.email, agent_context, booking)
+            if hasattr(booking.created_by, 'phone_number') and booking.created_by.phone_number:
+                send_sms_with_template('booking_approved_agent', booking.created_by.phone_number, agent_context, booking)
+        
+        # Send to Admin (if approved_by exists)
+        if booking.approved_by:
+            admin_context = {
+                **base_context,
+                'admin_name': booking.approved_by.get_full_name(),
+            }
+            send_email_with_template('booking_approved_admin', booking.approved_by.email, admin_context, booking)
+            if hasattr(booking.approved_by, 'phone_number') and booking.approved_by.phone_number:
+                send_sms_with_template('booking_approved_admin', booking.approved_by.phone_number, admin_context, booking)
+    else:
+        # For IN-PERSON and ZOOM: Send to agent, client, and salesman
+        
+        # Send to Agent (who created the booking)
+        if booking.created_by.groups.filter(name='remote_agent').exists():
+            agent_context = {
+                **base_context,
+                'agent_name': booking.created_by.get_full_name(),
+            }
+            send_email_with_template('booking_approved_agent', booking.created_by.email, agent_context, booking)
+            if hasattr(booking.created_by, 'phone_number') and booking.created_by.phone_number:
+                send_sms_with_template('booking_approved_agent', booking.created_by.phone_number, agent_context, booking)
+        
+        # Send to Client
+        client_context = base_context.copy()
+        send_email_with_template('booking_approved_client', booking.client.email, client_context, booking)
+        if booking.client.phone_number:
+            send_sms_with_template('booking_approved_client', booking.client.phone_number, client_context, booking)
+        
+        # Send to Salesman
+        salesman_context = base_context.copy()
+        send_email_with_template('booking_approved_salesman', booking.salesman.email, salesman_context, booking)
+        if hasattr(booking.salesman, 'phone_number') and booking.salesman.phone_number:
+            send_sms_with_template('booking_approved_salesman', booking.salesman.phone_number, salesman_context, booking)
 
 
 def send_booking_reminder(booking):
-    """Send appointment reminder to client and salesman - separate messages for each"""
+    """Send appointment reminder to client and salesman - separate messages for each
+    
+    Includes location for in-person or zoom_link for zoom meetings.
+    Reminders are NOT sent for live_transfer bookings.
+    """
     config = SystemConfig.get_config()
+    
+    # Skip reminders for live transfers
+    if booking.appointment_type == 'live_transfer':
+        return
+    
+    # Determine meeting type details for reminder
+    meeting_details = ''
+    if booking.appointment_type == 'in_person':
+        meeting_details = f'Location: {booking.location}' if booking.location else 'In-Person Meeting'
+    elif booking.appointment_type == 'zoom':
+        meeting_details = f'Zoom Link: {booking.zoom_link}' if booking.zoom_link else 'Zoom Meeting'
     
     # Base context
     base_context = {
@@ -716,6 +773,10 @@ def send_booking_reminder(booking):
         'appointment_date': booking.appointment_date.strftime('%B %d, %Y'),
         'appointment_time': booking.appointment_time.strftime('%I:%M %p'),
         'company_name': config.company_name,
+        'meeting_type': booking.get_appointment_type_display(),
+        'meeting_details': meeting_details,
+        'location': booking.location if booking.appointment_type == 'in_person' else '',
+        'zoom_link': booking.zoom_link if booking.appointment_type == 'zoom' else '',
     }
     
     # Send to Client
@@ -803,37 +864,147 @@ def send_booking_cancellation(booking):
 
 def send_booking_declined_notification(booking):
     """
-    Send notification when booking is declined by admin (email + SMS to agent)
+    Send notification when booking is declined by admin (email + SMS to agent and admin)
+    
+    For all booking types (including live_transfer): Only sends to agent and admin who declined.
     """
+    config = SystemConfig.get_config()
+    
+    # Determine meeting type details
+    meeting_details = ''
+    if booking.appointment_type == 'live_transfer':
+        meeting_details = 'LIVE TRANSFER'
+    elif booking.appointment_type == 'in_person':
+        meeting_details = f'In-Person at {booking.location}' if booking.location else 'In-Person Meeting'
+    elif booking.appointment_type == 'zoom':
+        meeting_details = 'Zoom Meeting'
+    
+    base_context = {
+        'client_name': booking.client.get_full_name(),
+        'salesman_name': booking.salesman.get_full_name(),
+        'business_name': booking.client.business_name,
+        'appointment_date': booking.appointment_date.strftime('%B %d, %Y'),
+        'appointment_time': booking.appointment_time.strftime('%I:%M %p'),
+        'company_name': config.company_name,
+        'meeting_type': booking.get_appointment_type_display(),
+        'meeting_details': meeting_details,
+        'decline_reason': booking.decline_reason,
+        'admin_name': booking.declined_by.get_full_name() if booking.declined_by else 'Admin',
+    }
+    
     # Email/SMS to remote agent who created the booking
     if booking.created_by.groups.filter(name='remote_agent').exists():
-        subject = f'Booking Declined - {booking.client.get_full_name()}'
-        
-        context = {
-            'booking': booking,
-            'agent': booking.created_by,
-            'admin': booking.declined_by,
+        agent_context = {
+            **base_context,
+            'agent_name': booking.created_by.get_full_name(),
         }
         
-        message = render_to_string('emails/booking_declined.txt', context)
-        html_message = render_to_string('emails/booking_declined.html', context)
+        # Try to use template if available, otherwise fall back to old method
+        try:
+            send_email_with_template('booking_declined_agent', booking.created_by.email, agent_context, booking)
+        except Exception:
+            # Fallback to old method
+            subject = f'Booking Declined - {booking.client.get_full_name()}'
+            context = {
+                'booking': booking,
+                'agent': booking.created_by,
+                'admin': booking.declined_by,
+            }
+            message = render_to_string('emails/booking_declined.txt', context)
+            html_message = render_to_string('emails/booking_declined.html', context)
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[booking.created_by.email],
+                html_message=html_message,
+                fail_silently=False,
+            )
         
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[booking.created_by.email],
-            html_message=html_message,
-            fail_silently=False,
-        )
         # SMS to agent
         try:
-            sms_body = f"Declined: {booking.client.get_full_name()} {booking.appointment_date} {booking.appointment_time.strftime('%I:%M %p')}"
+            sms_body = f"Declined: {booking.client.get_full_name()} {booking.appointment_date} {booking.appointment_time.strftime('%I:%M %p')} ({meeting_details})"
             send_sms(getattr(booking.created_by, 'phone_number', None), sms_body)
         except Exception:
             pass
+    
+    # Send to Admin who declined (optional notification)
+    if booking.declined_by:
+        admin_context = {
+            **base_context,
+        }
+        try:
+            send_email_with_template('booking_declined_admin', booking.declined_by.email, admin_context, booking)
+        except Exception:
+            pass  # Admin notification is optional
 
-
+def send_booking_created_notification(booking):
+    """
+    Send notifications when a new booking is created - separate messages for agent and admin.
+    
+    Behavior by appointment type:
+    - Live Transfer: Sends to agent and admin only (not client/salesman)
+    - In-Person: Sends to agent, admin, and includes location
+    - Zoom: Sends to agent, admin, and includes zoom_link
+    """
+    config = SystemConfig.get_config()
+    
+    # Determine meeting type details
+    meeting_details = ''
+    if booking.appointment_type == 'live_transfer':
+        meeting_details = 'This is a LIVE TRANSFER appointment.'
+    elif booking.appointment_type == 'in_person':
+        meeting_details = f'Location: {booking.location}' if booking.location else 'In-Person Meeting'
+    elif booking.appointment_type == 'zoom':
+        meeting_details = f'Zoom Link: {booking.zoom_link}' if booking.zoom_link else 'Zoom Meeting'
+    
+    # Base context for all notifications
+    base_context = {
+        'client_name': booking.client.get_full_name(),
+        'salesman_name': booking.salesman.get_full_name(),
+        'business_name': booking.client.business_name,
+        'appointment_date': booking.appointment_date.strftime('%B %d, %Y'),
+        'appointment_time': booking.appointment_time.strftime('%I:%M %p'),
+        'company_name': config.company_name,
+        'meeting_type': booking.get_appointment_type_display(),
+        'meeting_details': meeting_details,
+        'location': booking.location if booking.appointment_type == 'in_person' else '',
+        'zoom_link': booking.zoom_link if booking.appointment_type == 'zoom' else '',
+        'booking_status': booking.get_status_display(),
+    }
+    
+    # Send to Agent (who created the booking)
+    if booking.created_by.groups.filter(name='remote_agent').exists():
+        agent_context = {
+            **base_context,
+            'agent_name': booking.created_by.get_full_name(),
+        }
+        
+        # Email to agent
+        send_email_with_template('booking_created_agent', booking.created_by.email, agent_context, booking)
+        
+        # SMS to agent (if phone number exists)
+        if hasattr(booking.created_by, 'phone_number') and booking.created_by.phone_number:
+            send_sms_with_template('booking_created_agent', booking.created_by.phone_number, agent_context, booking)
+    
+    # Send to Admin(s)
+    # Get all active admin users
+    admin_users = User.objects.filter(is_staff=True, is_active=True)
+    
+    for admin in admin_users:
+        admin_context = {
+            **base_context,
+            'admin_name': admin.get_full_name(),
+            'agent_name': booking.created_by.get_full_name(),
+        }
+        
+        # Email to admin
+        send_email_with_template('booking_created_admin', admin.email, admin_context, booking)
+        
+        # SMS to admin (if phone number exists)
+        if hasattr(admin, 'phone_number') and admin.phone_number:
+            send_sms_with_template('booking_created_admin', admin.phone_number, admin_context, booking)
+            
 def process_scheduled_messages():
     """Process all pending scheduled messages (call from cron job)"""
     now = timezone.now()

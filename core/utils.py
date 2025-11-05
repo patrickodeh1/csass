@@ -7,6 +7,7 @@ from django.utils.html import strip_tags
 from datetime import datetime, timedelta, time
 import os
 import pytz
+from django.conf import settings
 from .models import (SystemConfig, Booking, PayrollPeriod, AvailableTimeSlot, AvailabilityCycle, User, MessageTemplate, DripCampaign, 
                      ScheduledMessage, CommunicationLog)
 
@@ -347,50 +348,76 @@ def cleanup_past_dates_slots():
     return count
 
 def _get_twilio_client():
-    """Create a Twilio client from environment variables only"""
-    # Get credentials from environment variables
-    sid = os.getenv('TWILIO_ACCOUNT_SID', '')
-    token = os.getenv('TWILIO_AUTH_TOKEN', '')
-    from_number = os.getenv('TWILIO_FROM_NUMBER', '')
+    """Create a Twilio client from environment variables/settings"""
+    from django.conf import settings
+    
+    sid = settings.TWILIO_ACCOUNT_SID
+    token = settings.TWILIO_AUTH_TOKEN
+    from_number = settings.TWILIO_FROM_NUMBER
     
     # Check if credentials are configured
     if not sid or not token or not from_number:
+        logger.warning("Twilio credentials not configured")
         return None, from_number
     
     try:
         from twilio.rest import Client
         client = Client(sid, token)
         return client, from_number
-    except Exception:
+    except Exception as e:
+        logger.error(f"Failed to create Twilio client: {str(e)}")
         return None, from_number
 
 
 def is_sms_enabled():
-    """Check if SMS is enabled via environment variable"""
-    return os.getenv('SMS_ENABLED', 'false').lower() in ('true', '1', 'yes')
-
+    """Check if SMS is enabled via settings"""
+    return getattr(settings, 'SMS_ENABLED', False)
 
 def send_sms(to_phone: str, body: str) -> bool:
-    """Send an SMS via Twilio. Returns True if sent, False otherwise."""
+    """
+    Send an SMS via Twilio. Returns True if sent, False otherwise.
+    
+    Args:
+        to_phone: Phone number in E.164 format (e.g., +12345678900)
+        body: SMS message body (max 1600 chars, but recommend 320 for single SMS)
+    
+    Returns:
+        bool: True if SMS sent successfully, False otherwise
+    """
+    from .models import CommunicationLog
+    
     if not to_phone or not body:
+        logger.warning("SMS send failed: Missing phone number or body")
         return False
     
     # Check if SMS is enabled
     if not is_sms_enabled():
+        logger.info("SMS sending disabled in settings")
+        return False
+    
+    # Normalize phone number to E.164 format if needed
+    to_phone = normalize_phone_number(to_phone)
+    
+    if not to_phone:
+        logger.warning("Invalid phone number format")
         return False
     
     client, from_number = _get_twilio_client()
     if client is None:
+        logger.error("Twilio client not available")
         return False
     
     try:
+        # Truncate body to 320 chars for single SMS
+        body = body[:320] if len(body) > 320 else body
+        
         message = client.messages.create(
             from_=from_number,
             to=to_phone,
-            body=body[:320]  # Limit to 320 chars
+            body=body
         )
         
-        # Log the SMS
+        # Log successful SMS
         CommunicationLog.objects.create(
             recipient_phone=to_phone,
             communication_type='sms',
@@ -398,17 +425,77 @@ def send_sms(to_phone: str, body: str) -> bool:
             status='sent'
         )
         
+        logger.info(f"SMS sent successfully to {to_phone}, SID: {message.sid}")
         return True
+        
     except Exception as e:
         # Log failed SMS
+        error_msg = str(e)
+        logger.error(f"SMS send failed to {to_phone}: {error_msg}")
+        
         CommunicationLog.objects.create(
             recipient_phone=to_phone,
             communication_type='sms',
             body=body,
             status='failed',
-            error_message=str(e)
+            error_message=error_msg
         )
         return False
+
+
+def normalize_phone_number(phone: str) -> str:
+    """
+    Normalize phone number to E.164 format.
+    
+    Examples:
+        '7025096502' -> '+17025096502'
+        '702-509-6502' -> '+17025096502'
+        '+17025096502' -> '+17025096502'
+    
+    Args:
+        phone: Phone number in any common format
+    
+    Returns:
+        str: Phone number in E.164 format, or empty string if invalid
+    """
+    if not phone:
+        return ''
+    
+    # Remove all non-digit characters except leading +
+    cleaned = ''.join(c for c in phone if c.isdigit() or c == '+')
+    
+    # If already has +, validate length
+    if cleaned.startswith('+'):
+        # E.164 format: +[country code][number]
+        # US numbers: +1 followed by 10 digits = 12 chars total
+        if len(cleaned) >= 11:  # Minimum valid length
+            return cleaned
+        else:
+            logger.warning(f"Invalid E.164 phone number: {cleaned}")
+            return ''
+    
+    # Assume US number if no country code
+    if len(cleaned) == 10:
+        return f'+1{cleaned}'
+    elif len(cleaned) == 11 and cleaned.startswith('1'):
+        return f'+{cleaned}'
+    else:
+        logger.warning(f"Invalid phone number length: {cleaned}")
+        return ''
+
+
+def validate_phone_number(phone: str) -> bool:
+    """
+    Validate if a phone number is in correct format.
+    
+    Args:
+        phone: Phone number to validate
+    
+    Returns:
+        bool: True if valid, False otherwise
+    """
+    normalized = normalize_phone_number(phone)
+    return bool(normalized)
 
 
 def start_drip_campaign(booking, campaign_type):

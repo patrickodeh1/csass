@@ -43,12 +43,11 @@ python-http-client==3.3.7
 pytz==2025.2
 redis==7.0.0
 requests==2.32.5
-sendgrid
-sendgrid-django
+sendgrid==6.12.5
 six==1.17.0
 sqlparse==0.5.3
 starkbank-ecdsa==2.2.0
-twilio
+twilio==9.8.5
 typing_extensions==4.15.0
 tzdata==2025.2
 urllib3==2.5.0

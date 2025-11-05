@@ -86,6 +86,7 @@
                         <option value="">All Types</option>
                         <option value="zoom" {% if selected_type == 'zoom' %}selected{% endif %}>Zoom</option>
                         <option value="in_person" {% if selected_type == 'in_person' %}selected{% endif %}>In-Person</option>
+                        <option value="live_transfer" {% if selected_type == 'live_transfer' %}selected{% endif %}>Live Transfer</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -200,7 +201,14 @@
                                         <div><i class="bi bi-hourglass-split"></i> <strong>{{ booking.appointment_time|date:"g:iA" }}</strong></div>
                                         <div class="text-truncate"><i class="bi bi-briefcase"></i> {{ booking.client.business_name }}</div>
                                         <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">
-                                            {% if booking.appointment_type == 'zoom' %}<i class="bi bi-camera-video"></i> ZOOM{% else %}<i class="bi bi-geo-alt"></i> IN-PERSON{% endif %}
+                                            {% if booking.appointment_type == 'zoom' %}
+                                                <i class="bi bi-camera-video"></i> ZOOM
+                                            {% elif booking.appointment_type == 'live_transfer' %}
+                                                <i class="bi bi-telephone"></i> LIVE TRANSFER
+                                            {% else %}
+                                                <i class="bi bi-geo-alt"></i> IN-PERSON
+                                            {% endif %}
+
                                         </span>
                                     </div>
                                     {% endfor %}
@@ -213,7 +221,14 @@
                                         <div><i class="bi bi-check-circle"></i> <strong>{{ booking.appointment_time|date:"g:iA" }}</strong></div>
                                         <div class="text-truncate"><i class="bi bi-briefcase"></i> {{ booking.client.business_name }}</div>
                                         <span class="badge bg-primary" style="font-size: 0.65rem;">
-                                            {% if booking.appointment_type == 'zoom' %}<i class="bi bi-camera-video"></i> ZOOM{% else %}<i class="bi bi-geo-alt"></i> IN-PERSON{% endif %}
+                                            {% if booking.appointment_type == 'zoom' %}
+                                                <i class="bi bi-camera-video"></i> ZOOM
+                                            {% elif booking.appointment_type == 'live_transfer' %}
+                                                <i class="bi bi-telephone"></i> LIVE TRANSFER
+                                            {% else %}
+                                                <i class="bi bi-geo-alt"></i> IN-PERSON
+                                            {% endif %}
+
                                         </span>
                                     </div>
                                     {% endfor %}
@@ -247,7 +262,14 @@
                                         <div><i class="bi bi-hourglass-split"></i> <strong>{{ booking.appointment_time|date:"g:iA" }}</strong></div>
                                         <div class="text-truncate"><i class="bi bi-briefcase"></i> {{ booking.client.business_name }}</div>
                                         <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">
-                                            {% if booking.appointment_type == 'zoom' %}<i class="bi bi-camera-video"></i> ZOOM{% else %}<i class="bi bi-geo-alt"></i> IN-PERSON{% endif %}
+                                            {% if booking.appointment_type == 'zoom' %}
+                                                <i class="bi bi-camera-video"></i> ZOOM
+                                            {% elif booking.appointment_type == 'live_transfer' %}
+                                                <i class="bi bi-telephone"></i> LIVE TRANSFER
+                                            {% else %}
+                                                <i class="bi bi-geo-alt"></i> IN-PERSON
+                                            {% endif %}
+
                                         </span>
                                     </div>
                                     {% endfor %}
@@ -260,7 +282,14 @@
                                         <div><i class="bi bi-check-circle"></i> <strong>{{ booking.appointment_time|date:"g:iA" }}</strong></div>
                                         <div class="text-truncate"><i class="bi bi-briefcase"></i> {{ booking.client.business_name }}</div>
                                         <span class="badge bg-primary" style="font-size: 0.65rem;">
-                                            {% if booking.appointment_type == 'zoom' %}<i class="bi bi-camera-video"></i> ZOOM{% else %}<i class="bi bi-geo-alt"></i> IN-PERSON{% endif %}
+                                            {% if booking.appointment_type == 'zoom' %}
+                                                <i class="bi bi-camera-video"></i> ZOOM
+                                            {% elif booking.appointment_type == 'live_transfer' %}
+                                                <i class="bi bi-telephone"></i> LIVE TRANSFER
+                                            {% else %}
+                                                <i class="bi bi-geo-alt"></i> IN-PERSON
+                                            {% endif %}
+
                                         </span>
                                     </div>
                                     {% endfor %}
@@ -351,7 +380,14 @@
                                 <div class="d-block"><i class="bi bi-hourglass-split"></i> <strong>{{ booking.appointment_time|date:"g:i A" }}</strong></div>
                                 <small class="d-block text-truncate"><i class="bi bi-briefcase"></i> {{ booking.client.business_name }}</small>
                                 <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">
-                                    {% if booking.appointment_type == 'zoom' %}<i class="bi bi-camera-video"></i> ZOOM{% else %}<i class="bi bi-geo-alt"></i> IN-PERSON{% endif %}
+                                    {% if booking.appointment_type == 'zoom' %}
+                                                <i class="bi bi-camera-video"></i> ZOOM
+                                            {% elif booking.appointment_type == 'live_transfer' %}
+                                                <i class="bi bi-telephone"></i> LIVE TRANSFER
+                                            {% else %}
+                                                <i class="bi bi-geo-alt"></i> IN-PERSON
+                                            {% endif %}
+
                                 </span>
                             </div>
                         </div>
@@ -364,7 +400,14 @@
                                 <div class="d-block"><i class="bi bi-check-circle"></i> <strong>{{ booking.appointment_time|date:"g:i A" }}</strong></div>
                                 <small class="d-block text-truncate"><i class="bi bi-briefcase"></i> {{ booking.client.business_name }}</small>
                                 <span class="badge bg-info" style="font-size: 0.65rem;">
-                                    {% if booking.appointment_type == 'zoom' %}<i class="bi bi-camera-video"></i> ZOOM{% else %}<i class="bi bi-geo-alt"></i> IN-PERSON{% endif %}
+                                    {% if booking.appointment_type == 'zoom' %}
+                                                <i class="bi bi-camera-video"></i> ZOOM
+                                            {% elif booking.appointment_type == 'live_transfer' %}
+                                                <i class="bi bi-telephone"></i> LIVE TRANSFER
+                                            {% else %}
+                                                <i class="bi bi-geo-alt"></i> IN-PERSON
+                                            {% endif %}
+
                                 </span>
                             </div>
                         </div>
@@ -418,7 +461,14 @@
                                 <div class="d-block"><i class="bi bi-hourglass-split"></i> <strong>{{ booking.appointment_time|date:"g:i A" }}</strong></div>
                                 <small class="d-block text-truncate"><i class="bi bi-briefcase"></i> {{ booking.client.business_name }}</small>
                                 <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">
-                                    {% if booking.appointment_type == 'zoom' %}<i class="bi bi-camera-video"></i> ZOOM{% else %}<i class="bi bi-geo-alt"></i> IN-PERSON{% endif %}
+                                    {% if booking.appointment_type == 'zoom' %}
+                                                <i class="bi bi-camera-video"></i> ZOOM
+                                            {% elif booking.appointment_type == 'live_transfer' %}
+                                                <i class="bi bi-telephone"></i> LIVE TRANSFER
+                                            {% else %}
+                                                <i class="bi bi-geo-alt"></i> IN-PERSON
+                                            {% endif %}
+
                                 </span>
                             </div>
                         </div>
@@ -431,7 +481,14 @@
                                 <div class="d-block"><i class="bi bi-check-circle"></i> <strong>{{ booking.appointment_time|date:"g:i A" }}</strong></div>
                                 <small class="d-block text-truncate"><i class="bi bi-briefcase"></i> {{ booking.client.business_name }}</small>
                                 <span class="badge bg-primary" style="font-size: 0.65rem;">
-                                    {% if booking.appointment_type == 'zoom' %}<i class="bi bi-camera-video"></i> ZOOM{% else %}<i class="bi bi-geo-alt"></i> IN-PERSON{% endif %}
+                                    {% if booking.appointment_type == 'zoom' %}
+                                                <i class="bi bi-camera-video"></i> ZOOM
+                                            {% elif booking.appointment_type == 'live_transfer' %}
+                                                <i class="bi bi-telephone"></i> LIVE TRANSFER
+                                            {% else %}
+                                                <i class="bi bi-geo-alt"></i> IN-PERSON
+                                            {% endif %}
+
                                 </span>
                             </div>
                         </div>
@@ -486,7 +543,14 @@
                                 <i class="bi bi-hourglass-split"></i> <strong>{{ booking.appointment_time|date:"g:i A" }}</strong>
                             </h5>
                             <span class="badge bg-warning text-dark" style="font-size: 0.9rem;">
-                                {% if booking.appointment_type == 'zoom' %}<i class="bi bi-camera-video"></i> ZOOM{% else %}<i class="bi bi-geo-alt"></i> IN-PERSON{% endif %}
+                                {% if booking.appointment_type == 'zoom' %}
+                                                <i class="bi bi-camera-video"></i> ZOOM
+                                            {% elif booking.appointment_type == 'live_transfer' %}
+                                                <i class="bi bi-telephone"></i> LIVE TRANSFER
+                                            {% else %}
+                                                <i class="bi bi-geo-alt"></i> IN-PERSON
+                                            {% endif %}
+
                             </span>
                         </div>
                         <p class="mb-1"><i class="bi bi-briefcase"></i> <strong>Client:</strong> {{ booking.client.business_name }}</p>
@@ -506,7 +570,14 @@
                                 <i class="bi bi-check-circle"></i> <strong>{{ booking.appointment_time|date:"g:i A" }}</strong>
                             </h5>
                             <span class="badge bg-primary" style="font-size: 0.9rem;">
-                                {% if booking.appointment_type == 'zoom' %}<i class="bi bi-camera-video"></i> ZOOM{% else %}<i class="bi bi-geo-alt"></i> IN-PERSON{% endif %}
+                                {% if booking.appointment_type == 'zoom' %}
+                                                <i class="bi bi-camera-video"></i> ZOOM
+                                            {% elif booking.appointment_type == 'live_transfer' %}
+                                                <i class="bi bi-telephone"></i> LIVE TRANSFER
+                                            {% else %}
+                                                <i class="bi bi-geo-alt"></i> IN-PERSON
+                                            {% endif %}
+
                             </span>
                         </div>
                         <p class="mb-1"><i class="bi bi-briefcase"></i> <strong>Client:</strong> {{ booking.client.business_name }}</p>

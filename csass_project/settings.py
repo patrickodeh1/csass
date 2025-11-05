@@ -160,16 +160,18 @@ LOGOUT_REDIRECT_URL = 'login'
 #EMAIL SETTINGS
 
 
-# PASSWORD RESETEMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
+SENDGRID_API_KEY = config("SENDGRID_API_KEY")
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='Payton@helpmeexit.com')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='ncij yyip rbrs fyhm')
-
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+# PASSWORD RESET TOKEN EXPIRY
 PASSWORD_RESET_TIMEOUT = 86400  # 24 hours
+
+# SMS SETTINGS (Twilio)
+SMS_ENABLED = config('SMS_ENABLED', default=False, cast=bool)
+TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID', default='')
+TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='')
+TWILIO_FROM_NUMBER = config('TWILIO_FROM_NUMBER', default='')
 
 # CRISPY FORMS
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"

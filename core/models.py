@@ -269,6 +269,9 @@ class Booking(models.Model):
         null=True,
         blank=True
     )
+    sheet_row_number = models.IntegerField(null=True, blank=True, help_text="Row number in Google Sheet")
+    sheet_sync_hash = models.CharField(max_length=64, blank=True, help_text="Hash to prevent sync loops")
+    last_synced_at = models.DateTimeField(null=True, blank=True, help_text="Last time synced with sheet")
     cancellation_reason = models.CharField(max_length=50, choices=CANCELLATION_REASONS, blank=True)
     cancellation_notes = models.TextField(blank=True)
     canceled_at = models.DateTimeField(null=True, blank=True)
@@ -301,6 +304,7 @@ class Booking(models.Model):
             models.Index(fields=['salesman', 'appointment_date', 'status']),
             models.Index(fields=['created_by', 'created_at']),  # CRITICAL: Added for remote agent commission queries
             models.Index(fields=['payroll_period']),
+            models.Index(fields=['sheet_row_number']),
         ]
         ordering = ['appointment_date', 'appointment_time']
     

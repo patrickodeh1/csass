@@ -157,8 +157,17 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'calendar'
 LOGOUT_REDIRECT_URL = 'login'
 
-#EMAIL SETTINGS
 
+# Google Sheets Integration
+GOOGLE_KEY_FILE = config('GOOGLE_KEY_FILE', default='credentials/google-credentials.json')
+SPREADSHEET_ID = config('SPREADSHEET_ID', default='')
+SHEET_NAME = config('SHEET_NAME', default='Live Transfers')
+
+# Sheet Sync Settings
+SHEET_SYNC_INTERVAL_SECONDS = config('SHEET_SYNC_INTERVAL_SECONDS', default=30, cast=int)
+
+
+#EMAIL SETTINGS
 
 EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
 SENDGRID_API_KEY = config("SENDGRID_API_KEY")
@@ -226,6 +235,10 @@ CELERY_BEAT_SCHEDULE = {
         'options': {
             'expires': 3600,  # Task expires after 1 hour
         },
+     'sync-sheets-every-30-seconds': {
+        'task': 'core.tasks.sync_sheet_to_db_periodic',
+        'schedule': 30.0,  # Every 30 seconds
+    },
     },
     
     # Cleanup past slots at 1 AM EST every day

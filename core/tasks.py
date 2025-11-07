@@ -1,6 +1,8 @@
 from celery import shared_task
 from django.utils import timezone
 from datetime import timedelta, datetime, time
+from .sheets_sync import GoogleSheetsSyncService
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -223,3 +225,19 @@ def cleanup_old_slots_async():
     except Exception as e:
         logger.error(f"❌ Error during old slot cleanup: {str(e)}")
         return f"Error: {str(e)}"
+    
+
+
+@shared_task
+def sync_sheet_to_db_periodic():
+    """
+    Periodic task to sync changes from Google Sheets to DB.
+    Run this every 30 seconds or as needed.
+    """
+    try:
+        sync_service = GoogleSheetsSyncService()
+        updated_count = sync_service.sync_sheet_changes_to_db()
+        return f"Sheet sync completed: {updated_count} bookings updated"
+    except Exception as e:
+        logger.error(f"Error in periodic sheet sync: {str(e)}")
+        return f"Sheet sync failed: {str(e)}"

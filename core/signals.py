@@ -365,3 +365,28 @@ def log_booking_delete(sender, instance, **kwargs):
         entity_id=instance.id,
         changes=changes
     )
+
+
+@receiver(post_save, sender=Booking)
+def sync_booking_to_sheet(sender, instance, created, **kwargs):
+    """Sync booking to Google Sheets when created or status changes"""
+    from .sheets_sync import GoogleSheetsSyncService
+    
+    # Only sync live transfer bookings
+    if instance.appointment_type != 'live_transfer':
+        return
+    
+    try:
+        sync_service = GoogleSheetsSyncService()
+        
+        if created:
+            # New booking - add to sheet
+            logger.info(f"Signal triggered for new live transfer booking {instance.id}")
+            sync_service.sync_new_booking_to_sheet(instance)
+        else:
+            # Existing booking - update if status changed
+            if hasattr(instance, '_original_status') and instance._original_status != instance.status:
+                logger.info(f"Signal triggered for status change on booking {instance.id}")
+                sync_service.update_sheet_from_booking(instance)
+    except Exception as e:
+        logger.error(f"Error in booking sheet sync signal: {str(e)}")

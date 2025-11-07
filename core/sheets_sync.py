@@ -41,8 +41,10 @@ class GoogleSheetsSyncService:
         """Convert booking approval status to sheet status"""
         if booking.status == 'confirmed':
             return 'Payable'
-        else:
+        elif booking.status == 'declined':
             return 'Non-Payable'
+        else:
+            return 'Pending'
     
     def get_approval_status_from_sheet(self, sheet_status):
         """Convert sheet status to booking approval status"""

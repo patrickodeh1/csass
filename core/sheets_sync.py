@@ -42,7 +42,7 @@ class GoogleSheetsSyncService:
         if booking.status == 'confirmed':
             return 'Payable'
         elif booking.status == 'declined':
-            return 'Non-Payable'
+            return 'Non Payable'
         else:
             return 'Pending'
     
@@ -50,7 +50,7 @@ class GoogleSheetsSyncService:
         """Convert sheet status to booking approval status"""
         if sheet_status == 'Payable':
             return 'confirmed'
-        elif sheet_status == 'Non-Payable':
+        elif sheet_status == 'Non Payable':
             return 'declined'
         else:
             return 'pending'

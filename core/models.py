@@ -659,7 +659,9 @@ class AvailableTimeSlot(models.Model):
         return self.start_time == check_time
 
     def __str__(self):
-        return f"{self.salesman.get_full_name()} - {self.date.strftime('%b %d, %Y')} {self.start_time} ({self.get_appointment_type_display()})"
+        salesman_name = self.salesman.get_full_name() if getattr(self, "salesman", None) else "No Salesman"
+        date_str = self.date.strftime("%b %d, %Y") if self.date else "No Date"
+        return f"{salesman_name} - {date_str} {self.start_time or ''} ({self.get_appointment_type_display()})"
 
 
 class MessageTemplate(models.Model):

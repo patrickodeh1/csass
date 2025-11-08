@@ -40,7 +40,7 @@ class BookingAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
         ('Additional Information', {
-            'fields': ('notes', 'audio_file'),
+            'fields': ('notes', 'audio_file', 'sheet_sync_hash', 'sheet_row_number', 'last_synced_at'),
             'classes': ('collapse',)
         }),
         ('Status Information', {

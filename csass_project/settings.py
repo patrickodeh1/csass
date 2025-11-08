@@ -235,10 +235,6 @@ CELERY_BEAT_SCHEDULE = {
         'options': {
             'expires': 3600,  # Task expires after 1 hour
         },
-     'sync-sheets-every-30-seconds': {
-        'task': 'core.tasks.sync_sheet_to_db_periodic',
-        'schedule': 30.0,  # Every 30 seconds
-    },
     },
     
     # Cleanup past slots at 1 AM EST every day
@@ -257,5 +253,10 @@ CELERY_BEAT_SCHEDULE = {
         'options': {
             'expires': 7200,
         },
+    },
+    #sync sheet to db every 30 seconds
+    'sync-sheets-every-30-seconds': {
+        'task': 'core.tasks.sync_sheet_to_db_periodic',
+        'schedule': 30.0,  # Every 30 seconds
     },
 }

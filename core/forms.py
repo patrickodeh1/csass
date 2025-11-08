@@ -967,12 +967,20 @@ class LiveTransferForm(forms.Form):
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter phone number'})
     )
     
+    
     # LIVE TRANSFER SPECIFIC FIELDS (REQUIRED)
+
     resort = forms.CharField(
         max_length=255,
         required=True,
         label='Resort Name',
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter resort name'})
+    )
+    specialist_name = forms.CharField(
+        max_length=50,
+        required=False,
+        label='Specialist Name',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter specialist name (optional)'})
     )
     maintenance_fees = forms.DecimalField(
         max_digits=10,
@@ -1034,6 +1042,7 @@ class LiveTransferForm(forms.Form):
                 'business_name': 'CETS/HME In House Live Transfers',
                 'first_name': self.cleaned_data['client_first_name'],
                 'last_name': self.cleaned_data.get('client_last_name', ''),
+                'specialist_name': self.cleaned_data.get('specialist_name', ''),
                 'email': placeholder_email,
                 'created_by': created_by
             }

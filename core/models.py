@@ -201,6 +201,7 @@ class Client(models.Model):
     business_name = models.CharField(max_length=200, help_text="business name")
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100, blank=True, null=True)
+    specialist_name = models.CharField(max_length=50, blank=True, null=True)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=20)
     notes = models.TextField(blank=True)

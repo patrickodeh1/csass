@@ -82,7 +82,7 @@ class GoogleSheetsSyncService:
                 str(booking.mortgage_balance) if booking.mortgage_balance else '',  # PIF/Mortgage
                 str(booking.maintenance_fees) if booking.maintenance_fees else '',  # Fees
                 booking.created_by.get_full_name() if booking.created_by else '',  # Transfer Agent
-                '',  # CETS Rep (leave blank as per requirement)
+                booking.client.specialist_name or '',  # CETS Rep (leave blank as per requirement)
                 self.get_payable_status(booking),  # Payable/Non Payable
             ]
             

@@ -1,6 +1,5 @@
 .env
 venv/
-core/migrations/
 __pycache__/
 *.pyc
 credentials/

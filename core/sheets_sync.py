@@ -10,21 +10,43 @@ from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
-
 class GoogleSheetsSyncService:
     def __init__(self):
-        """Initialize Google Sheets API connection"""
+        """Initialize Google Sheets API connection - works with file path OR JSON string"""
         try:
-            credentials = service_account.Credentials.from_service_account_file(
-                settings.GOOGLE_KEY_FILE,
-                scopes=['https://www.googleapis.com/auth/spreadsheets']
-            )
+            google_key = settings.GOOGLE_KEY_FILE
+            
+            # Determine if it's a file path or JSON string
+            # File paths won't start with '{' and will be relatively short
+            if google_key.strip().startswith('{'):
+                # It's a JSON string - parse and load directly
+                try:
+                    credentials_dict = json.loads(google_key)
+                    credentials = service_account.Credentials.from_service_account_info(
+                        credentials_dict,
+                        scopes=['https://www.googleapis.com/auth/spreadsheets']
+                    )
+                    logger.info("Loaded Google credentials from JSON string (production)")
+                except json.JSONDecodeError as e:
+                    raise ValueError(f"Invalid JSON in GOOGLE_KEY_FILE: {str(e)}")
+            elif os.path.isfile(google_key):
+                # It's a file path - load from file
+                credentials = service_account.Credentials.from_service_account_file(
+                    google_key,
+                    scopes=['https://www.googleapis.com/auth/spreadsheets']
+                )
+                logger.info(f"Loaded Google credentials from file: {google_key}")
+            else:
+                raise ValueError(
+                    f"GOOGLE_KEY_FILE must be either a valid file path or JSON string. "
+                    f"Got something that's neither a file nor valid JSON: {google_key[:50]}..."
+                )
 
             self.sheets_service = build('sheets', 'v4', credentials=credentials)
             self.spreadsheet_id = settings.SPREADSHEET_ID
             self.sheet_name = getattr(settings, 'SHEET_NAME', 'Sheet1')
 
-            logger.info("Google Sheets service initialized successfully")
+            logger.info(f"Google Sheets service initialized - Sheet: {self.sheet_name}")
         except Exception as e:
             logger.error(f"Failed to initialize Google Sheets service: {str(e)}")
             raise

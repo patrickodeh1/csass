@@ -226,7 +226,6 @@ LOGGING = {
 }
 
 
-# Celery Beat Schedule - MUST be at the end of settings.py
 CELERY_BEAT_SCHEDULE = {
     # Generate timeslots at midnight EST every day
     'generate-daily-timeslots-midnight': {
@@ -254,9 +253,14 @@ CELERY_BEAT_SCHEDULE = {
             'expires': 7200,
         },
     },
-    #sync sheet to db every 30 seconds
+    
+    # NEW: Sync Google Sheets to DB every 30 seconds
     'sync-sheets-every-30-seconds': {
         'task': 'core.tasks.sync_sheet_to_db_periodic',
         'schedule': 30.0,  # Every 30 seconds
+        'options': {
+            'expires': 60,  # Task expires after 1 minute if not executed
+        },
     },
 }
+

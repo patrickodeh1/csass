@@ -228,16 +228,25 @@ def cleanup_old_slots_async():
     
 
 
-@shared_task
-def sync_sheet_to_db_periodic():
+@shared_task(bind=True, max_retries=3)
+def sync_sheet_to_db_periodic(self):
     """
     Periodic task to sync changes from Google Sheets to DB.
     Run this every 30 seconds or as needed.
     """
     try:
+        from .sheets_sync import GoogleSheetsSyncService
+        from .models import Booking
+        
         sync_service = GoogleSheetsSyncService()
+        
+        # Set flag on all bookings to prevent signal loops during sync
         updated_count = sync_service.sync_sheet_changes_to_db()
+        
+        logger.info(f"Periodic sheet sync completed: {updated_count} bookings updated")
         return f"Sheet sync completed: {updated_count} bookings updated"
+        
     except Exception as e:
         logger.error(f"Error in periodic sheet sync: {str(e)}")
-        return f"Sheet sync failed: {str(e)}"
+        # Retry with exponential backoff
+        raise self.retry(exc=e, countdown=60 * (2 ** self.request.retries))

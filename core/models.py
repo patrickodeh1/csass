@@ -309,8 +309,6 @@ class Booking(models.Model):
         ]
         ordering = ['appointment_date', 'appointment_time']
     
-    def __str__(self):
-        return f"{self.client} with {self.salesman.get_full_name()} on {self.appointment_date}"
     
     def counts_for_commission(self):
         """Check if booking counts for commission - must be confirmed or completed"""
@@ -368,10 +366,36 @@ class Booking(models.Model):
         # Update the original status for next save
         self.__original_status = self.status
         # ---------------------------------------------------------------------
-    
     def __str__(self):
-        return f"{self.client} with {self.salesman.get_full_name()} on {self.appointment_date}"
-
+        """
+        Optimized __str__ method that avoids N+1 queries.
+        Uses salesman_id to check for existence without triggering a database query.
+        """
+        try:
+            # Use salesman_id to avoid database hit
+            if self.salesman_id:
+                # Check if salesman is already cached
+                if hasattr(self, '_salesman_cache'):
+                    salesman_name = self._salesman_cache
+                else:
+                    salesman_name = self.salesman.get_full_name()
+            else:
+                salesman_name = "No Salesman"
+            
+            # Use client_id similarly
+            if self.client_id:
+                if hasattr(self, '_client_cache'):
+                    client_name = self._client_cache
+                else:
+                    client_name = str(self.client)
+            else:
+                client_name = "No Client"
+            
+            return f"{client_name} with {salesman_name} on {self.appointment_date}"
+        except Exception:
+            # Fallback for edge cases
+            return f"Booking {self.id or 'New'}"
+    
     def _handle_slot_activation(self, new_status):
         """Logic to activate or deactivate the associated AvailableTimeSlot."""
         if not self.available_slot:

@@ -6,8 +6,10 @@ import hashlib
 import json
 import logging
 from datetime import datetime
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
+
 
 class GoogleSheetsSyncService:
     def __init__(self):
@@ -29,7 +31,6 @@ class GoogleSheetsSyncService:
 
     def get_sheet_range(self, range_str):
         """Return properly quoted sheet range for Google Sheets API"""
-        # Escape single quotes in sheet name by doubling them
         escaped_name = self.sheet_name.replace("'", "''")
         return f"'{escaped_name}'!{range_str}"
     
@@ -60,63 +61,57 @@ class GoogleSheetsSyncService:
         Sync a newly created 'live_transfer' booking to Google Sheets.
         Only syncs if appointment_type is live_transfer.
         """
-        # Check if this is a live transfer booking
         if booking.appointment_type != 'live_transfer':
             logger.info(f"Booking {booking.id} is not a live transfer, skipping sheet sync")
             return False
         
-        # Check if already synced
         if booking.sheet_row_number:
             logger.info(f"Booking {booking.id} already synced to row {booking.sheet_row_number}")
             return False
         
         try:
-            # Prepare row data - matching the CSV structure
+            # Prepare row data
             row_data = [
-                booking.id,  # ID
-                booking.created_at.strftime('%m/%d'),  # Date
-                booking.client.first_name,  # First Name
-                booking.client.last_name or '',  # Last Name
-                booking.client.phone_number,  # Phone Number
-                booking.resort or '',  # Resort
-                str(booking.mortgage_balance) if booking.mortgage_balance else '',  # PIF/Mortgage
-                str(booking.maintenance_fees) if booking.maintenance_fees else '',  # Fees
-                booking.created_by.get_full_name() if booking.created_by else '',  # Transfer Agent
-                booking.client.specialist_name or '',  # CETS Rep (leave blank as per requirement)
-                self.get_payable_status(booking),  # Payable/Non Payable
-                booking.notes or ''  # Notes (if needed)
+                booking.id,
+                booking.created_at.strftime('%m/%d'),
+                booking.client.first_name,
+                booking.client.last_name or '',
+                booking.client.phone_number,
+                booking.resort or '',
+                str(booking.mortgage_balance) if booking.mortgage_balance else '',
+                str(booking.maintenance_fees) if booking.maintenance_fees else '',
+                booking.created_by.get_full_name() if booking.created_by else '',
+                booking.client.specialist_name or '',
+                self.get_payable_status(booking),
+                booking.notes or ''
             ]
             
-            # Generate sync hash
             sync_hash = self.generate_sync_hash({'approval_status': booking.status})
             
-            # Append to sheet
             body = {'values': [row_data]}
             result = self.sheets_service.spreadsheets().values().append(
                 spreadsheetId=self.spreadsheet_id,
-                range=self.get_sheet_range('A:K'),  # A through K for 11 columns
+                range=self.get_sheet_range('A:L'),  # Changed to L for 12 columns (including notes)
                 valueInputOption='USER_ENTERED',
                 body=body
             ).execute()
             
-            # Get the row number that was just added
+            # Get the row number
             updated_range = result.get('updates', {}).get('updatedRange', '')
-            # Extract row number from range like 'Sheet1!A2:K2'
             if ':' in updated_range:
-                row_part = updated_range.split('!')[1].split(':')[0]  # Get 'A2'
-                row_number = int(''.join(filter(str.isdigit, row_part)))  # Extract '2'
+                row_part = updated_range.split('!')[1].split(':')[0]
+                row_number = int(''.join(filter(str.isdigit, row_part)))
             else:
-                # Fallback: count current rows
                 sheet_data = self.sheets_service.spreadsheets().values().get(
                     spreadsheetId=self.spreadsheet_id,
                     range=self.get_sheet_range('A:A')
                 ).execute()
                 row_number = len(sheet_data.get('values', [])) + 1
             
-            # Update booking with sheet info
+            # FIXED: Use timezone.now() instead of datetime.now()
             booking.sheet_row_number = row_number
             booking.sheet_sync_hash = sync_hash
-            booking.last_synced_at = datetime.now()
+            booking.last_synced_at = timezone.now()
             booking.save(update_fields=['sheet_row_number', 'sheet_sync_hash', 'last_synced_at'])
             
             logger.info(f"Booking {booking.id} synced to sheet row {row_number}")
@@ -136,12 +131,11 @@ class GoogleSheetsSyncService:
             payable_status = self.get_payable_status(booking)
             new_hash = self.generate_sync_hash({'approval_status': booking.status})
             
-            # Prevent loop: check if this update came from sheet
             if booking.sheet_sync_hash == new_hash:
                 logger.info(f"Sync hash matches for booking {booking.id}, skipping to prevent loop")
                 return False
             
-            # Update the Payable/Non-Payable cell (column K - the 11th column)
+            # Update the Payable/Non-Payable cell (column K)
             body = {'values': [[payable_status]]}
             self.sheets_service.spreadsheets().values().update(
                 spreadsheetId=self.spreadsheet_id,
@@ -150,9 +144,9 @@ class GoogleSheetsSyncService:
                 body=body
             ).execute()
             
-            # Update sync metadata
+            # FIXED: Use timezone.now()
             booking.sheet_sync_hash = new_hash
-            booking.last_synced_at = datetime.now()
+            booking.last_synced_at = timezone.now()
             booking.save(update_fields=['sheet_sync_hash', 'last_synced_at'])
             
             logger.info(f"Updated sheet row {booking.sheet_row_number} for booking {booking.id}")
@@ -165,19 +159,17 @@ class GoogleSheetsSyncService:
     def sync_sheet_changes_to_db(self):
         """Check sheet for changes and update DB accordingly"""
         try:
-            # Get all data from sheet (skip header row)
             result = self.sheets_service.spreadsheets().values().get(
                 spreadsheetId=self.spreadsheet_id,
-                range=self.get_sheet_range('A2:K')
+                range=self.get_sheet_range('A2:L')  # Changed to include all columns
             ).execute()
             
             rows = result.get('values', [])
             updated_count = 0
             
             for i, row in enumerate(rows):
-                row_number = i + 2  # +2 because we skip header and arrays are 0-indexed
+                row_number = i + 2
                 
-                # Ensure row has enough columns
                 if len(row) < 11:
                     continue
                 
@@ -193,21 +185,19 @@ class GoogleSheetsSyncService:
                     logger.warning(f"Booking {booking_id} not found in DB")
                     continue
                 
-                # Convert sheet status to DB status
                 db_status = self.get_approval_status_from_sheet(sheet_payable_status)
                 new_hash = self.generate_sync_hash({'approval_status': db_status})
                 
-                # Check if status changed and it's not from our own update
                 if booking.status != db_status and booking.sheet_sync_hash != new_hash:
                     booking.status = db_status
                     booking.sheet_sync_hash = new_hash
-                    booking.last_synced_at = datetime.now()
+                    booking.last_synced_at = timezone.now()  # FIXED: Use timezone.now()
                     
-                    # Set approval/decline metadata
+                    # FIXED: Use timezone.now() for approval/decline timestamps
                     if db_status == 'confirmed' and not booking.approved_at:
-                        booking.approved_at = datetime.now()
+                        booking.approved_at = timezone.now()
                     elif db_status == 'declined' and not booking.declined_at:
-                        booking.declined_at = datetime.now()
+                        booking.declined_at = timezone.now()
                     
                     booking.save()
                     updated_count += 1
@@ -223,23 +213,21 @@ class GoogleSheetsSyncService:
     def initialize_sheet(self):
         """Initialize sheet with headers if empty"""
         try:
-            # Check if headers exist
             result = self.sheets_service.spreadsheets().values().get(
                 spreadsheetId=self.spreadsheet_id,
-                range=self.get_sheet_range('A1:K1')
+                range=self.get_sheet_range('A1:L1')  # Changed to L for notes column
             ).execute()
 
             if not result.get('values'):
-                # Add headers matching the CSV structure
                 headers = [[
                     'ID', 'Date', 'First Name', 'Last Name', 'Phone Number', 
                     'Resort', 'PIF/Mortgage', 'Fees', 'Transfer Agent', 
-                    'CETS Rep', 'Payable/Non Payable'
+                    'CETS Rep', 'Payable/Non Payable', 'Notes'
                 ]]
                 body = {'values': headers}
                 self.sheets_service.spreadsheets().values().update(
                     spreadsheetId=self.spreadsheet_id,
-                    range=self.get_sheet_range('A1:K1'),
+                    range=self.get_sheet_range('A1:L1'),
                     valueInputOption='USER_ENTERED',
                     body=body
                 ).execute()

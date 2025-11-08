@@ -376,17 +376,22 @@ def sync_booking_to_sheet(sender, instance, created, **kwargs):
     if instance.appointment_type != 'live_transfer':
         return
     
+    # Skip if this is being called from a sync operation to prevent loops
+    if getattr(instance, '_skip_sheet_sync', False):
+        return
+    
     try:
         sync_service = GoogleSheetsSyncService()
         
         if created:
-            # New booking - add to sheet
             logger.info(f"Signal triggered for new live transfer booking {instance.id}")
             sync_service.sync_new_booking_to_sheet(instance)
         else:
-            # Existing booking - update if status changed
-            if hasattr(instance, '_original_status') and instance._original_status != instance.status:
-                logger.info(f"Signal triggered for status change on booking {instance.id}")
-                sync_service.update_sheet_from_booking(instance)
+            # FIXED: Use __original_status (double underscore) to match model's __init__
+            if hasattr(instance, '_Booking__original_status'):
+                original_status = instance._Booking__original_status
+                if original_status != instance.status:
+                    logger.info(f"Signal triggered for status change on booking {instance.id}: {original_status} -> {instance.status}")
+                    sync_service.update_sheet_from_booking(instance)
     except Exception as e:
         logger.error(f"Error in booking sheet sync signal: {str(e)}")

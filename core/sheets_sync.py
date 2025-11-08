@@ -7,7 +7,7 @@ import json
 import logging
 from datetime import datetime
 from django.utils import timezone
-
+import os
 logger = logging.getLogger(__name__)
 
 class GoogleSheetsSyncService:

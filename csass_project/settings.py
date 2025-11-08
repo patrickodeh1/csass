@@ -161,7 +161,7 @@ LOGOUT_REDIRECT_URL = 'login'
 # Google Sheets Integration
 GOOGLE_KEY_FILE = config('GOOGLE_KEY_FILE', default='credentials/google-credentials.json')
 SPREADSHEET_ID = config('SPREADSHEET_ID', default='')
-SHEET_NAME = config('SHEET_NAME', default='Live Transfers')
+SHEET_NAME = config('SHEET_NAME')
 
 # Sheet Sync Settings
 SHEET_SYNC_INTERVAL_SECONDS = config('SHEET_SYNC_INTERVAL_SECONDS', default=30, cast=int)

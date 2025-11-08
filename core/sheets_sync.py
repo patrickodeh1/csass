@@ -44,7 +44,7 @@ class GoogleSheetsSyncService:
 
             self.sheets_service = build('sheets', 'v4', credentials=credentials)
             self.spreadsheet_id = settings.SPREADSHEET_ID
-            self.sheet_name = getattr(settings, 'SHEET_NAME', 'Sheet1')
+            self.sheet_name = settings.SHEET_NAME
 
             logger.info(f"Google Sheets service initialized - Sheet: {self.sheet_name}")
         except Exception as e:

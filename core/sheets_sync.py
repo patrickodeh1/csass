@@ -84,6 +84,7 @@ class GoogleSheetsSyncService:
                 booking.created_by.get_full_name() if booking.created_by else '',  # Transfer Agent
                 booking.client.specialist_name or '',  # CETS Rep (leave blank as per requirement)
                 self.get_payable_status(booking),  # Payable/Non Payable
+                booking.notes or ''  # Notes (if needed)
             ]
             
             # Generate sync hash
